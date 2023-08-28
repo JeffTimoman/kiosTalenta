@@ -1,0 +1,252 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-xl px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="user"></i></div>
+                        Edit User
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        Manage Classes
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.registration_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        Registration Profiles
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        User Profiles
+                    </a>
+                    
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        Back to Users List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-4">
+    <div class="row">
+        <div class="col" id="alertCol">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+
+                    {{ message }}
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    {% if user.user_type == 2 %}
+        <form method="POST" enctype="multipart/form-data" id="changeForm">
+        {{ editUserForm.csrf_token() }}
+        <div class="row">
+            <div class="col-xl-4">
+                <div class="card mb- mb-xl-0">
+                    <div class="card-header">Profile Picture</div>
+                    <div class="card-body text-center">
+                        <!-- Profile picture image-->
+                        <img class="img-account-profile rounded-circle mb-2" src="{{url_for('static', filename='/profile_pictures/')}}{{user.profile_picture}}" alt="" />
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <a href="{{ url_for('admin.change_password', user_id=user.id) }}" class="btn btn-outline-red">Reset Password</a>
+                            </div>
+                        </div>
+
+                        <!-- Profile picture help block-->
+                        <div class="small font-italic text-muted mb-4">JPG or PNG no larger than 5 MB</div>
+                        <!-- Profile picture upload button-->
+                        <!-- <button class="btn btn-primary" type="button">Upload new image</button> -->
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <!-- <input type="file" name="file" class="form-control" autocomplete="off" required> -->
+                                {{ editUserForm.profile_picture(class="form-control", autocomplete="off", type="file")}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-8">
+                <!-- Account details card-->
+                <div class="card mb-4">
+                    <div class="card-header">Account Details</div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="small mb-1" for="inputName">Name</label>
+                                {{ editUserForm.name(class="form-control", autocomplete="off", required=True, placeholder="Enter your name", value=user.name, id="inputName", type="text")}}
+                            </div>
+                        </div>
+                        <div class="mb-3 row gx-3">
+                            <div class="col-md-4">
+                                <label class="small mb-1" for="inputEmailAddress">Email address</label>
+                                {{ editUserForm.email(class="form-control", autocomplete="off", required=True, placeholder="Enter your email address", value=user.email, id="inputEmailAddress", type="email")}}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small mb-1" for="inputPhone">Phone</label>
+                                {{ editUserForm.phone(class="form-control", autocomplete="off", required=True, placeholder="Enter your phone number", value=user.phone, id="inputPhone", type="text")}}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small mb-1" for="inputRoom">Room</label>
+                                {{ editUserForm.room(class="form-control", autocomplete="off", required=True, placeholder="AXXX / BXXX / ABXXX", value=user.room, id="inputRoom", type="text")}}
+                            </div>
+                        </div>
+                        <div class="row gx-3">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="small mb-1">Role</label>
+                                    {{ editUserForm.user_type(class="form-select", required=True, id="inputRole")}}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small mb-1">Class</label>
+                                {{ editUserForm.user_class(class="form-select", required=True, id="inputClass")}}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small mb-1">Status</label>
+                                {{ editUserForm.active_field(class="form-select", required=True, id="inputStatus")}}
+                                <!-- <select class="form-select" aria-label="Default select example">
+                                    <option selected disabled>Select a class:</option>
+                                    <option value="0"selected>Inactive</option>
+                                    <option value="1">Active</option>
+                                </select> -->
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <button class="btn btn-primary" type="button" id="saveChanges">Save changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </form>
+    {% else %}
+        <form method="POST" enctype="multipart/form-data" id="changeForm">
+            {{ editUserForm.csrf_token() }}
+            <div class="row">
+                <div class="col-xl-4">
+                    <div class="card mb- mb-xl-0">
+                        <div class="card-header">Profile Picture</div>
+                        <div class="card-body text-center">
+                            <!-- Profile picture image-->
+                            <img class="img-account-profile rounded-circle mb-2" src="{{url_for('static', filename='/profile_pictures/')}}{{user.profile_picture}}" alt="" />
+                            <!-- Profile picture help block-->
+                            <div class="small font-italic text-muted mb-4">JPG or PNG no larger than 5 MB</div>
+                            <!-- Profile picture upload button-->
+                            <!-- <button class="btn btn-primary" type="button">Upload new image</button> -->
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <a href="{{ url_for('admin.change_password', user_id=user.id) }}" class="btn btn-outline-red">Reset Password</a>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <!-- <input type="file" name="file" class="form-control" autocomplete="off" required> -->
+                                    {{ editUserForm.profile_picture(class="form-control", autocomplete="off", type="file")}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-8">
+                    <!-- Account details card-->
+                    <div class="card mb-4">
+                        <div class="card-header">Account Details</div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="small mb-1" for="inputName">Name</label>
+                                    {{ editUserForm.name(class="form-control", autocomplete="off", required=True, placeholder="Enter your name", value=user.name, id="inputName", type="text")}}
+                                </div>
+                            </div>
+                            <div class="mb-3 row gx-3">
+                                <div class="col-md-4">
+                                    <label class="small mb-1" for="inputEmailAddress">Email address</label>
+                                    {{ editUserForm.email(class="form-control", autocomplete="off", required=True, placeholder="Enter your email address", value=user.email, id="inputEmailAddress", type="email")}}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small mb-1">Role</label>
+                                    {{ editUserForm.user_type(class="form-select", required=True, id="inputRole")}}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small mb-1">Status</label>
+                                    {{ editUserForm.active_field(class="form-select", required=True, id="inputStatus")}}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <button class="btn btn-primary" type="button" id="saveChanges">Save changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    {% endif%}
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    
+    $(document).ready(function(){
+        var userClass = "{{user.user_class.name}}";
+        var userRole = "{{user.user_type}}";
+        var userActive = "{{user.active}}" == "True" ? "1" : "0";
+        $('#inputClass option').each(function() {
+            if ($(this).text() == userClass) {
+                $(this).attr('selected', 'selected');
+            }
+        });
+        $('#inputRole option').each(function() {
+            if ($(this).val() == userRole) {
+                $(this).attr('selected', 'selected');
+            }
+        });
+        $('#inputStatus option').each(function() {
+            if ($(this).val() == userActive) {
+               $(this).attr('selected', 'selected');
+            }
+        });
+        
+        $('#saveChanges').on('click', function(){
+            var r = confirm("Are you sure you want to save changes?");
+            if (r == false) {
+                return;
+            }
+
+            $('#changeForm').submit();
+        })
+    });
+</script>
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}

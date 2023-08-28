@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        :root {
+            --grey: #F4F2FF;
+            --dark-grey: #B7B7B7;
+
+            --green: #23AE00;
+            --light-green: #BDFFAC;
+
+            --red: #FE2727;
+            --light-red: #FFD2D2;
+
+            --blue: #277FFE;
+            --light-blue: #B6C6FF;
+            --dark-blue: #1368E3;
+
+            --bs: #AECFFF;
+            --text: #9B9B9B;
+        }
+
+        a {
+            color: var(--blue);
+            transition: all .3s ease;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: var(--dark-blue);
+        }
+
+        body {
+            background: var(--light-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 0 16px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+        }
+        form {
+            width: 100%;
+            padding: 28px;
+            border-radius: 12px;
+            background: #fff;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%) scale(.8);
+            opacity: 0;
+            z-index: 100;
+            transition: all .3s ease;
+            transition-delay: 0s;
+        }
+        form.active {
+            transform: translateY(-50%);
+            opacity: 1;
+            z-index: 200;
+            transition-delay: .3s;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+        .input-group {
+            width: 100%;
+            position: relative;
+        }
+        .input-group input {
+            padding: 12px 40px 12px 20px;
+            outline: none;
+            border-radius: 6px;
+            border: 1px solid var(--dark-grey);
+            width: 100%;
+            transition: all .3s ease;
+        }
+
+        /* Validation */
+        .input-group input:focus,
+        .input-group input:not(:placeholder-shown) {
+            border-color: var(--blue);
+            background: var(--grey);
+        }
+        .input-group input:focus + i,
+        .input-group input:not(:placeholder-shown) + i {
+            color: var(--blue);
+        }
+        .input-group input:focus:valid {
+            box-shadow: 0 0 0 4px var(--light-green);
+        }
+        .input-group input:valid:not(:placeholder-shown) {
+            border-color: var(--green);
+        }
+        .input-group input:valid:not(:placeholder-shown) + i {
+            color: var(--green);
+        }
+        .input-group input:invalid:not(:placeholder-shown) {
+            border-color: var(--red);
+        }
+        .input-group input:invalid:not(:placeholder-shown) + i {
+            color: var(--red);
+        }
+        .input-group input:focus:invalid {
+            box-shadow: 0 0 0 4px var(--light-red);
+        }
+        .input-group input:focus,
+        .input-group input:focus:placeholder-shown {
+            box-shadow: 0 0 0 4px var(--bs);
+        }
+
+        /* Validation */
+
+        .input-group i {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 20px;
+            color: var(--text);
+            pointer-events: none;
+            transition: all .3s ease;
+        }
+        .form-group .help-text {
+            font-size: 12px;
+            color: var(--text);
+        }
+        .btn-submit {
+            padding: 12px 0;
+            display: block;
+            width: 100%;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .3s ease;
+            border: none;
+            font-weight: 500;
+            background: var(--blue);
+            margin-bottom: 20px;
+        }
+        .btn-submit:hover {
+            background: var(--dark-blue);
+        }
+        /* Additional styles for select and option */
+        .form-group select {
+            appearance: none;
+            padding: 12px 40px 12px 20px;
+            outline: none;
+            border-radius: 6px;
+            border: 1px solid var(--dark-grey);
+            width: 100%;
+            transition: all .3s ease;
+            background: white url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='none' d='M0 0h24v24H0z'/><path d='M8.293 9.293L12 13l3.707-3.707a1 1 0 1 0-1.414-1.414L12 10.586 9.707 8.293a1 1 0 1 0-1.414 1.414z'/></svg>") no-repeat right 20px center;
+            background-size: 16px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .form-group select:focus {
+            border-color: var(--blue);
+            background: var(--grey);
+        }
+
+        .form-group select:focus:valid {
+            box-shadow: 0 0 0 4px var(--light-green);
+        }
+
+        .form-group select:valid {
+            border-color: var(--green);
+        }
+
+        .form-group select:invalid {
+            border-color: var(--red);
+        }
+
+        .form-group select:focus:invalid {
+            box-shadow: 0 0 0 4px var(--light-red);
+        }
+
+        .form-group select:focus,
+        .form-group select:focus:placeholder-shown {
+            box-shadow: 0 0 0 4px var(--bs);
+            
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alert-danger{
+            background: var(--light-red);
+            color: var(--red);
+            border: 1px solid var(--red);
+        }
+
+        .alert-success{
+            background: var(--light-green);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .alert-warning{
+            background: var(--light-blue);
+            color: var(--blue);
+            border: 1px solid var(--blue);
+        }
+        .alert-info{
+            background: var(--light-blue);
+            color: var(--blue);
+            border: 1px solid var(--blue);
+        }
+
+        .row{
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .col-md-6{
+            width: 48%;
+        }
+
+    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
+	<title>Login</title>
+</head>
+<body>
+	
+	<div class="container">
+		<form action="?action=login" class="login active" method="POST">
+			<h2 class="title">Login with your account</h2>
+            {{ loginForm.csrf_token }}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                    {{ message }}
+                    </div>
+                {% endfor %}
+                {% endif %}
+            {% endwith %}
+			<div class="form-group">
+				<label for="email">Email</label>
+				<div class="input-group">
+					<!-- <input type="email" id="email" placeholder="Email address"> -->
+                    {{ loginForm.email(type="email", class="form-control", placeholder="Email address") }}
+                    
+					<i class='bx bx-envelope'></i>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="password">Password</label>
+				<div class="input-group">
+					<!-- <input type="password" pattern=".{8,}" id="password" placeholder="Your password"> -->
+                    {{ loginForm.password(class="form-control", placeholder="Your password") }}
+					<i class='bx bx-lock-alt' ></i>
+				</div>
+				<span class="help-text">At least 8 characters</span>
+			</div>
+            {{ loginForm.submit(class="btn-submit")}}
+			<a href="#">Forgot password?</a>
+			<p>I don't have an account. <a href="#" onclick="switchForm('register', event)">Register</a></p>
+		</form>
+
+		<form action="?action=register" class="register" method="POST">
+            {{registrationForm.csrf_token}}
+			<h2 class="title">Register your account!</h2>
+            <div class="form-group">
+                
+				<label for="name">Name</label>
+				<div class="input-group">
+                   {{registrationForm.name(class="form-control", placeholder="Budi Santoso")}}
+					<!-- <input type="email" id="email" placeholder="Email address"> -->
+					<i class='bx bx-user'></i>
+				</div>
+			</div>
+            
+			<div class="form-group">
+                
+				<label for="email">Email</label>
+				<div class="input-group">
+                    {{registrationForm.email(type="email", class="form-control", placeholder="Email address")}}
+					<!-- <input type="email" id="email" placeholder="Email address"> -->
+					<i class='bx bx-envelope'></i>
+				</div>
+			</div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="user_class">Class</label>
+                        {{registrationForm.user_class(class="form-control")}}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                
+                        <label for="room">Room</label>
+                        <div class="input-group">
+                           {{registrationForm.room(class="form-control", placeholder="BXXX | AXXX | ABXXX")}}
+                            <i class='bx bx-door'></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                
+				<label for="name">Phone</label>
+				<div class="input-group">
+                   {{registrationForm.phone(class="form-control", placeholder="081234567890")}}
+					<i class='bx bx-phone'></i>
+				</div>
+			</div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-group">
+                            <!-- <input type="password" pattern=".{8,}" id="password" placeholder="Your password"> -->
+                            {{registrationForm.password(class="form-control", placeholder="Your password", id="password")}}
+                            <i class='bx bx-lock-alt' ></i>
+                        </div>
+                        <span class="help-text">At least 8 characters</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="confirm-pass">Confirm password</label>
+                        <div class="input-group">
+                            <!-- <input type="password" id="confirm-pass" placeholder="Enter password again"> -->
+                            {{registrationForm.confirm_password(class="form-control", placeholder="Your password", id="confirm-pass")}}
+                            <i class='bx bx-lock-alt' ></i>
+                        </div>
+                        <span class="help-text"></span>
+                    </div>
+                </div>
+            </div>
+
+
+			<!-- <button type="submit" class="btn-submit">Register</button> -->
+            {{registrationForm.submit(class="btn-submit")}}
+			<p>I already have an account. <a href="#" onclick="switchForm('login', event)">Login</a></p>
+		</form>
+	</div>
+
+	<script>
+        function switchForm(className, e) {
+            e.preventDefault();
+            const allForm = document.querySelectorAll('form');
+            const form = document.querySelector(`form.${className}`);
+        
+            allForm.forEach(item=> {
+                item.classList.remove('active');
+            })
+            form.classList.add('active');
+        }
+        
+        
+        const registerPassword = document.querySelector('form.register #password');
+        const registerConfirmPassword = document.querySelector('form.register #confirm-pass');
+        
+        registerPassword.addEventListener('input', function () {
+            registerConfirmPassword.pattern = `${this.value}`;
+        })
+    </script>
+</body>
+</html>

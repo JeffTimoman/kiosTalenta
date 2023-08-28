@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>{% block title %}{% endblock title %}</title>
+        <link rel="icon" type="image/x-icon" href="{{url_for('static', filename='dist/assets/img/favicon.png')}}"/>
+        {% block head %}{% endblock head %}
+        <link href="{{url_for('static', filename='dist/css/styles.css')}}" rel="stylesheet"/>
+        <script data-search-pseudo-elements defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js" crossorigin="anonymous"></script>
+        <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" />
+
+        
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.7.1/css/buttons.dataTables.min.css">
+        
+    </head>
+
+    <body class="nav-fixed">
+        <nav class="topnav navbar navbar-expand shadow justify-content-between justify-content-sm-start navbar-light bg-white" id="sidenavAccordion">
+            <!-- Sidenav Toggle Button-->
+            <button class="btn btn-icon btn-transparent-dark order-1 order-lg-0 me-2 ms-lg-2 me-lg-0" id="sidebarToggle"><i data-feather="menu"></i></button>
+            <!-- Navbar Brand-->
+            <!-- * * Tip * * You can use text or an image for your navbar brand.-->
+            <!-- * * * * * * When using an image, we recommend the SVG format.-->
+            <!-- * * * * * * Dimensions: Maximum height: 32px, maximum width: 240px-->
+            <a class="navbar-brand pe-3 ps-4 ps-lg-2" href="{{url_for('admin.index')}}">Kios Talenta</a>
+            <!-- Navbar Items-->
+            <ul class="navbar-nav align-items-center ms-auto">
+                <!-- User Dropdown-->
+                <li class="nav-item dropdown no-caret dropdown-user me-3 me-lg-4">
+                    <a class="btn btn-icon btn-transparent-dark dropdown-toggle" id="navbarDropdownUserImage" href="javascript:void(0);" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img class="img-fluid" src="{{url_for('static', filename='/profile_pictures/')}}{{current_user.profile_picture}}" /></a>
+                    <div class="dropdown-menu dropdown-menu-end border-0 shadow animated--fade-in-up" aria-labelledby="navbarDropdownUserImage">
+                        <h6 class="dropdown-header d-flex align-items-center">
+                            <img class="dropdown-user-img" src="{{url_for('static', filename='/profile_pictures/')}}{{current_user.profile_picture}}"/>
+                            <div class="dropdown-user-details">
+                                <div class="dropdown-user-details-name">{{current_user.name | title}}</div>
+                                <div class="dropdown-user-details-email">{{current_user.email}}</div>
+                            </div>
+                        </h6>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{url_for('admin.edit_user', user_id=current_user.id)}}">
+                            <div class="dropdown-item-icon"><i data-feather="settings"></i></div>
+                            Account
+                        </a>
+                        <a class="dropdown-item" href="{{url_for('main.logout')}}">
+                            <div class="dropdown-item-icon"><i data-feather="log-out"></i></div>
+                            Logout
+                        </a>
+                    </div>
+                </li>
+            </ul>
+
+        </nav>
+
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav">
+                <nav class="sidenav shadow-right sidenav-light">
+                    <div class="sidenav-menu">
+                        <div class="nav accordion" id="accordionSidenav"> 
+
+                            <!-- Dashboard -->
+                            <div class="sidenav-menu-heading">Dashboard</div>
+                            <!-- Admin Dashboard -->
+                            <a class="nav-link" href="{{url_for('admin.index')}}">
+                                <!-- <div class="nav-link-icon"><i data-feather="home"></i></div> -->
+                                <div class="nav-link-icon"><i data-feather="monitor"></i></div>
+                                Admin
+                            </a>
+                            <!-- Cashier Dashboard -->
+                            <a class="nav-link" href="#">
+                                <!-- <div class="nav-link-icon"><i data-feather="monitor"></i></div> -->
+                                <div class="nav-link-icon"><i class="fa-solid fa-cash-register"></i></div>
+                                Cashier
+                            </a>
+                            
+                            <!-- Data -->
+                            <div class="sidenav-menu-heading">Data</div>
+                            <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#collapseUser" aria-expanded="false" aria-controls="collapsePages">
+                                <div class="nav-link-icon"><i data-feather="user"></i></div>
+                                Users
+                                <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseUser" data-bs-parent="#accordionSidenav">
+                                <nav class="sidenav-menu-nested nav accordion" id="accordionSidenavUserMenu">
+                                    <a class="nav-link" href="{{url_for('admin.user_profiles')}}">User Profiles</a>
+                                    <a class="nav-link" href="#">User Classes</a>
+                                    <a class="nav-link" href="{{url_for('admin.registration_profiles')}}">Registration Profiles</a>
+                                </nav>
+                            </div>
+                            <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#collapseProduct" aria-expanded="false" aria-controls="collapsePages">
+                                <div class="nav-link-icon"><i data-feather="box"></i></div>
+                                Products
+                                <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseProduct" data-bs-parent="#accordionSidenav">
+                                <nav class="sidenav-menu-nested nav accordion" id="accordionSidenavProductMenu">
+                                    <a class="nav-link" href="#">Product Types</a>
+                                    <a class="nav-link" href="#">Product Details</a>
+                                    <!-- <a class="nav-link" href="#">Products Sold</a> -->
+                                </nav>
+                            </div>
+                            <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#collapseLaundry" aria-expanded="false" aria-controls="collapsePages">
+                                <div class="nav-link-icon"><i data-feather="droplet"></i></div>
+                                <!-- <div class="nav-link-icon"><i class="fa fa-shirt"></i></div> -->
+                                <!-- <div class="nav-link-icon"></div> -->
+                                Laundries
+                                <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseLaundry" data-bs-parent="#accordionSidenav">
+                                <nav class="sidenav-menu-nested nav accordion" id="accordionSidenavLaundryMenu">
+                                    <a class="nav-link" href="#">Laundry Provider</a>
+                                    <a class="nav-link" href="#">Laundry Types</a>
+                                </nav>
+                            </div>
+                            <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#collapseTransaction" aria-expanded="false" aria-controls="collapsePages">
+                                <div class="nav-link-icon"><i data-feather="flag"></i></div>
+                                <!-- <div class="nav-link-icon"><i class="fa fa-shirt"></i></div> -->
+                                <!-- <div class="nav-link-icon"></div> -->
+                                Transactions
+                                <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseTransaction" data-bs-parent="#accordionSidenav">
+                                <nav class="sidenav-menu-nested nav accordion" id="accordionSidenavTransactionMenu">
+                                    <a class="nav-link" href="#">Laundry</a>
+                                    <!-- <a class="nav-link" href="#">Product</a> -->
+                                    <a class="nav-link collapsed" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#pagesCollapseProductTransaction" aria-expanded="false" aria-controls="pagesCollapseAccount">
+                                        Product
+                                        <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                                    </a>
+                                    <div class="collapse" id="pagesCollapseProductTransaction" data-bs-parent="#accordionSidenavPagesMenu">
+                                        <nav class="sidenav-menu-nested nav">
+                                            <a class="nav-link" href="#">Offline</a>
+                                            <a class="nav-link" href="#">Online</a>
+                                        </nav>
+                                    </div>
+                                </nav>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <!-- Sidenav Footer-->
+                    <div class="sidenav-footer">
+                        <div class="sidenav-footer-content">
+                            <div class="sidenav-footer-subtitle">Logged in as:</div>
+                            <div class="sidenav-footer-title">{{current_user.name | title}}</div>
+                        </div>
+                    </div>
+                </nav>
+                {% block content %}
+    
+                {% endblock content %}
+            </div>
+            <div id="layoutSidenav_content">    
+                <main>
+                    {% block body %}
+
+                    {% endblock body %}
+                </main>
+            </div>
+            
+        </div>
+        <script>
+            
+        </script>
+        
+        <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js" crossorigin="anonymous"></script>
+        <script src="{{ url_for('static', filename='dist/js/scripts.js') }}"></script>
+        <script src="{{ url_for('static', filename='dist/js/litepicker.js')}}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" crossorigin="anonymous"></script>
+        <script src="{{ url_for('static', filename='js/admin/layout.js')}}"></script>
+        
+
+        {% block script %}
+
+        {% endblock script %}
+    </body>
+</html>

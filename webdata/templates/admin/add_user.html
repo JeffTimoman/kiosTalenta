@@ -1,0 +1,171 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-xl px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="user"></i></div>
+                        Add User
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        Manage Classes
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.registration_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        Registration Profiles
+                    </a>
+                    <!-- <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        User Profiles
+                    </a> -->
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        Back to User Profiles
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-4">
+    <div class="row">
+        <div class="col" id="alertCol">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+
+                    {{ message }}
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+
+<div class="container-xl px-4 mt-4">
+    <div class="row">
+        <div class="col" id="alertCol">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <form action="" method="POST" enctype="multipart/form-data" id="addUserForm">
+        
+        {{ addUserForm.csrf_token }}
+        {{ addUserForm.user_type(class="form-control mb-3", id="userRole")}}
+ 
+        <div class="row">
+            <div class="col-xl-4">
+                <!-- Profile picture card-->
+                <div class="card mb-4 mb-xl-0">
+                    <div class="card-header">Profile Picture</div>
+                    <div class="card-body text-center">
+                        <!-- Profile picture image-->
+                        <div class="small font-italic text-muted mb-4">JPG or PNG no larger than 5 MB</div>
+                        <!-- Profile picture upload button-->
+                        {{ addUserForm.profile_picture(class="form-control", id="inputProfilePicture")}}
+                        <!-- <button class="btn btn-primary" type="button">Upload new image</button> -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-8">
+                <!-- Account details card-->
+                <div class="card mb-4">
+                    <div class="card-header">Account Details</div>
+                    <div class="card-body">
+                        <!-- Form Row-->
+                        <div class="row gx-3 mb-3">
+                            <!-- Form Group (first name)-->
+                            <div class="col-md-12">
+                                <label class="small mb-1" for="inputFirstName">Name</label>
+                                {{ addUserForm.name(class="form-control", id="inputFirstName", type="text", placeholder="Bambang Sutoso") }}
+                                <!-- <input class="form-control" id="inputFirstName" type="text" placeholder="Bambang Sutoso" value="" /> -->
+                            </div>
+                        </div>
+                        
+                        <div class="row gx-3">
+                            <div class="mb-3 col-md-4">
+                                <label class="small mb-1" for="inputEmail">Email address</label>
+                                {{ addUserForm.email(class="form-control", id="inputEmail", type="email", placeholder="user@gmail.com")}}
+                                <!-- <input class="form-control" id="inputEmail" type="email" placeholder="user@gmail.com" value="" /> -->
+                            </div>
+                            <div class="mb-3 col-md-4">
+                                <label class="small mb-1" for="inputPhone">Phone</label>
+                                {{ addUserForm.phone(class="form-control", id="inputPhone", type="text", placeholder="081234567890")}}
+                                <!-- <input class="form-control" id="inputPhone" type="text" placeholder="081234567890" value=""/> -->
+                            </div>
+                            <div class="mb-3 col-md-4">
+                                <label class="small mb-1" for="inputRoom">Room</label>
+                                {{ addUserForm.room(class="form-control", id="inputRoom", type="text", placeholder="AXXX / BXXX / ABXXX") }}
+                                <!-- <input class="form-control" id="inputRoom" type="email" placeholder="AXXX / BXXX / ABXXX" value="" /> -->
+                            </div>
+                        </div>
+                        <div class="row gx-3 mb-3">
+                            <div class="mb-3 col-md-4">
+                                <label class="small mb-1">Role</label>
+                                <select class="form-select" aria-label="Default select example" disabled>
+                                    <option value="2" selected disabled>Customer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small mb-1">Class</label>
+                                {{ addUserForm.user_class(class="form-select", aria_label="Default select example", id="inputClass")}}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small mb-1">Status</label>
+                                {{ addUserForm.active_field (class="form-select", aria_label="Default select example", id="inputStatus")}}
+                            </div>
+                        </div>
+                        <!-- Submit button-->
+                        <button class="btn btn-primary" type="button">Add user</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function(){
+        $('#userRole').change(function(){
+            var role = $(this).val();
+            console.log(role);
+        });
+    })
+</script>
+
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}
