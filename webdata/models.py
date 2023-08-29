@@ -16,6 +16,10 @@ class UserClass(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
 
     users = db.relationship('User', backref='user_class', cascade='all, delete-orphan')
+    
+    @property
+    def user_count(self):
+        return User.query.filter_by(user_class_id=self.id).count()
 
     def __repr__(self):
         return f"UserClass('{self.name}')"

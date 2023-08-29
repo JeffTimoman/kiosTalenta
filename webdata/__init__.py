@@ -26,6 +26,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 from webdata.main.routes import main
 from webdata.admin.routes import admin
+from webdata.api.routes import api
 
 app.register_blueprint(main)
 app.register_blueprint(admin, url_prefix='/admin')
+app.register_blueprint(api, url_prefix='/api')

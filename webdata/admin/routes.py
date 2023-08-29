@@ -10,11 +10,12 @@ from werkzeug.utils import secure_filename
 
 from webdata.models import User, RegistrationProfile, UserClass
 
-from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm
+from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm
 
 from pytz import timezone
 from datetime import datetime
 from collections import OrderedDict
+from PIL import Image
 
 import uuid as uuid
 import os
@@ -25,6 +26,13 @@ admin = Blueprint('admin', __name__)
 
 CORS(admin, resources={r"/api/*": {"origins": "*"}})
 
+def save_image(form_picture, user_id):
+    pic_filename = secure_filename(form_picture.filename)
+    pic_name = str(uuid.uuid1()) + "_" + str(user_id)
+    pic_path = os.path.join(app.root_path, 'static/profile_pictures', pic_name)
+    form_picture.save(pic_path)
+    return pic_name
+
 @admin.route("/")
 @admin.route("/users")
 @login_required
@@ -32,6 +40,16 @@ def index():
     if current_user.user_type != 0:
         abort(403)
     return render_template('admin/index.html')
+
+
+@admin.route("/users/user_classes")
+@login_required
+def user_classes():
+    if current_user.user_type != 0:
+        abort(403)
+    classes = UserClass.query.all()
+    editClassForm = EditClassForm()
+    return render_template('admin/user_classes.html', classes=classes, editClassForm=editClassForm)
 
 @admin.route("/users/registration_profiles")
 @login_required
@@ -46,8 +64,122 @@ def add_user():
     if current_user.user_type != 0:
         abort(403)
     addUserForm = AddUserForm()
-    return render_template('admin/add_user.html', addUserForm=addUserForm)
+    if request.method == 'POST':
+        name = addUserForm.name.data
+        email = addUserForm.email.data
+        password = addUserForm.password.data
+        confirm = addUserForm.confirm.data
+        active = addUserForm.active_field.data
+        if active == '1':
+            active = True
+        else:
+            active = False
+        phone = None
+        room = None
+        user_class = None
+        role = addUserForm.user_type.data
+        print(role)
+        if role == None or role == '':
+            flash(f"Role cannot be empty!", 'danger')
+            return redirect(url_for('admin.add_user'))
+        
+        if role == '2' or role == 2:
+            phone = addUserForm.phone.data
+            room = addUserForm.room.data
+            user_class = addUserForm.user_class.data.id
+        
+        check_email = User.query.filter_by(email=email).first()
+        if check_email is not None:
+            flash(f"Email {email} already exists!", 'danger')
+            return redirect(url_for('admin.add_user'))
 
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            flash(f"Email {email} is not valid!", 'danger')
+            return redirect(url_for('admin.add_user'))
+        
+        if name == '' or name == None:
+            flash(f"Name cannot be empty!", 'danger')
+            return redirect(url_for('admin.add_user'))
+        
+        if len(name) < 3 or len(name) > 50:
+            flash(f"Name must be between 3 and 50 characters!", 'danger')
+            return redirect(url_for('admin.add_user'))
+        
+        if password == '' or password == None:
+            flash(f"Password cannot be empty!", 'danger')
+            return redirect(url_for('admin.add_user'))
+        
+        if password != confirm:
+            flash(f"Password and Confirm Password must be the same!", 'danger')
+            return redirect(url_for('admin.add_user'))
+        
+        if len(password) < 8 or len(password) > 50:
+            flash(f"Password must be between 8 and 50 characters!", 'danger')
+            return redirect(url_for('admin.add_user'))
+        if role == 2 or role == '2':
+            
+            if phone == None or phone == '':
+                flash(f"Phone cannot be empty!", 'danger')
+                return redirect(url_for('admin.add_user'))
+
+            phone_pattern = r'^08[0-9]{9,}$'
+            if len(phone) < 10 or len(phone) > 13:
+                flash(f"Phone must be between 10 and 13 characters!", 'danger')
+                return redirect(url_for('admin.add_user'))
+            
+            if not re.match(phone_pattern, phone):
+                flash(f"Phone number must be a 10-digit number!", 'danger')
+                return redirect(url_for('admin.add_user'))
+            
+            if room == None or room == '':
+                flash(f"Room cannot be empty!", 'danger')
+                return redirect(url_for('admin.add_user'))
+            
+            room_pattern = r'^(A|B|AB)[0-9]{3}$'
+            if len(room) < 4 or len(room) > 5:
+                flash(f"Room must be between 4 and 5 characters!", 'danger')
+                return redirect(url_for('admin.add_user'))
+            
+            if not re.match(room_pattern, room):
+                flash(f"Room must be a 4-digit/5-digit number!", 'danger')
+                return redirect(url_for('admin.add_user'))
+            
+            if user_class == None or user_class == '':
+                flash(f"Class cannot be empty!", 'danger')
+                return redirect(url_for('admin.add_user'))
+        
+        user = None
+        if role == '2' or role == 2:
+            user = User(name=name, email=email, password=bcrypt.generate_password_hash(password).decode('utf-8'), active=active, phone=phone, room=room, user_class_id=user_class, date_created=datetime.now(timezone('Asia/Jakarta')), user_type=role)
+        else: 
+            user = User(name=name, email=email, password=bcrypt.generate_password_hash(password).decode('utf-8'), active=active, date_created=datetime.now(timezone('Asia/Jakarta')), user_type=role)
+        
+        profile_picture = request.files['profile_picture']
+        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+        
+        if profile_picture.filename != '':
+            # output_size = (125, 125)
+            if not '.' in profile_picture.filename or profile_picture.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
+                flash(f"Profile picture must be a jpg or png file!", 'danger')
+                return redirect(url_for('admin.add_user'))
+            pic_name = str(uuid.uuid1()) + "_" + str(user.id) 
+            profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+            user.profile_picture = pic_name
+            
+            # i = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+            # i.thumbnail(output_size)
+            # i.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+        else:
+            user.profile_picture = 'default.png'
+        print(name, email, password, active, phone, room, user_class, profile_picture)
+        print(user.name, user.email, user.password, user.active, user.phone, user.room, user.user_class_id, user.date_created, user.profile_picture)
+        db.session.add(user)
+        db.session.commit()
+        flash(f"User {name.title()} has been added!", 'success')
+        return redirect(url_for('admin.add_user'))
+
+    return render_template('admin/add_user.html', addUserForm=addUserForm)
 
 @admin.route("/users/user_profiles")
 @login_required
@@ -154,15 +286,19 @@ def edit_user(user_id):
             
             if not re.match(room_pattern, room):
                 flash(f"Room must be a 4-digit/5-digit number!", 'danger')
-                return redirect(url_for('admin.edit_user', user_id=user_id))      
-        
+                return redirect(url_for('admin.edit_user', user_id=user_id))  
+                
+        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
         
         if profile_picture.filename != '':
+            if not '.' in profile_picture.filename or profile_picture.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
+                flash(f"Profile picture must be a jpg or png file!", 'danger')
+                return redirect(url_for('admin.add_user'))
             if user.profile_picture != 'default.png':
                 if os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], user.profile_picture)):
                     os.remove(os.path.join(app.config['UPLOAD_FOLDER'], user.profile_picture))
             user.profile_picture = profile_picture.filename
-            pic_filename = secure_filename(profile_picture.filename)
+            # pic_filename = secure_filename(profile_picture.filename)
             pic_name = str(uuid.uuid1()) + "_" + str(user.id)
             profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
             user.profile_picture = pic_name
@@ -185,7 +321,7 @@ def edit_user(user_id):
         # print(user.email, user.name, user.phone, user.room, user.user_type, user.user_class_id, user.active, user.profile_picture)
         db.session.commit()
         flash(f"User {user.name.title()} has been updated!", 'success')
-        return redirect(url_for('admin.user_profiles'))
+        return redirect(url_for('admin.edit_user', user_id=user_id))
         
     
     return render_template('admin/edit_user.html', user=user, editUserForm=editUserForm)
@@ -218,15 +354,6 @@ def change_password(user_id):
             return redirect(url_for('admin.change_password', user_id=user_id))
     
     return render_template('admin/change_password.html', user=user, changeUserPasswordForm=changeUserPasswordForm)
-
-
-@admin.route("/users/user_classes")
-@login_required
-def user_classes():
-    today_date = [datetime.now(timezone('Asia/Jakarta')).strftime("%A"), datetime.now(timezone('Asia/Jakarta')).strftime(" · %B %d, %Y · %I:%M %p")]
-    classes = UserClass.query.all()
-    flash(f"You are logged in as {current_user.name.title()}", 'success')
-    return render_template('admin/user_classes.html', today_date=today_date, classes=classes)
 
 
 @admin.route('/api/get_registration_profiles', methods=['GET'])

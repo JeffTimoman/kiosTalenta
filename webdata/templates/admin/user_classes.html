@@ -1,0 +1,163 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+
+<button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#editClassModal">Launch Demo Modal</button>
+
+<div class="modal fade" id="editClassModal" tabindex="-1" role="dialog" aria-labelledby="editClassModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editGroupModalLabel">Edit Class</h5>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form>
+            <div class="modal-body">
+                    <div class="mb-0">
+                        <label class="mb-1 small text-muted" for="formGroupName">Class Name</label>
+                        {{ editClassForm.name(class="form-control", placeholder="Enter class name...", id="className")}}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger-soft text-danger" type="button" data-bs-dismiss="modal">Cancel</button>
+                </form>
+                {{ editClassForm.submit(class="btn btn-primary-soft text-primary")}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-xl px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="globe"></i></div>
+                        User Classes
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <!-- <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="globe"></i>
+                        Manage Classes
+                    </a> -->
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.registration_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        Registration Profiles
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="#">
+                        <i class="me-1" data-feather="user-plus"></i>
+                        Add Class
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        Back to User Profiles
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-3">
+    <div class="row">
+        <div class="col" id="alertCol">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+
+                    {{ message }}
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    <div class="card mb-4">
+        <!-- <div class="card-header">
+        </div> -->
+        <div class="card-body" id="userClasses">
+            <table id="userClassesTable"->
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Total Member</th>
+                        <th>Date Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Total Member</th>
+                        <th>Date Created</th>
+                        <th>Action</th>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    {% for user_class in classes %}
+                        <tr>
+                            <td>{{user_class.id}}</td>
+                            <td>{{user_class.name}}</td>
+                            <td>{{user_class.user_count}}</td>
+                            <td>{{user_class.date_created}}</td>
+                            <td>
+                                <button class="btn btn-datatable btn-icon btn-transparent-dark me-2" type="button" data-bs-toggle="modal" data-bs-target="#editGroupModal"><i data-feather="edit"></i></button>
+                                                
+                                <a class="btn btn-datatable btn-icon btn-transparent-dark" href="#!"><i data-feather="trash-2"></i></a>
+                                    
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script type="module">
+    import {
+        DataTable
+    }from "{{ url_for('static', filename='dist/js/module.js') }}";
+    window.dt = new DataTable("#userClassesTable", {
+        perPageSelect: [5, 10, 25, ["All", -1]],
+        columns:[
+        {
+            select: 2,
+            sortSequence: ["desc", "asc"]
+        },
+        {
+            select: 4,
+            sortable: false
+        }
+        ],
+        scrollY: '40vh'
+    });
+</script>
+
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}
