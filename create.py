@@ -44,7 +44,23 @@ def main():
         user = RegistrationProfile(email=email, password=password, name=name, phone=phone, room=room, user_class=user_class)
         db.session.add(user)
         db.session.commit()
+        
     
+    
+def main():
+    for i in range(1, 33):
+        room = f'B5{i:02}'
+        # print(room)
+        data = UserRoom(name=room)
+        db.session.add(data)
+        db.session.commit()
+    
+def main():
+    types = ['Snack and Beverages', 'Utilities', 'Stationary', 'Others', 'Ice Cream']
+    for _type in types:
+        data = ProductType(name=_type)
+        db.session.add(data)
+        db.session.commit()  
 # def main():
 #     password = bcrypt.generate_password_hash("admin123").decode('utf-8')
 #     for i in range(100):

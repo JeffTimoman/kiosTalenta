@@ -20,13 +20,13 @@
                         <i class="me-1" data-feather="globe"></i>
                         Manage Classes
                     </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_rooms')}}">
+                        <i class="me-1" data-feather="home"></i>
+                        Manage Rooms
+                    </a>
                     <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.registration_profiles')}}">
                         <i class="me-1" data-feather="users"></i>
                         Registration Profiles
-                    </a>
-                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
-                        <i class="me-1" data-feather="users"></i>
-                        User Profiles
                     </a>
                     
                     <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
@@ -213,6 +213,14 @@
         var userClass = "{{user.user_class.name}}";
         var userRole = "{{user.user_type}}";
         var userActive = "{{user.active}}" == "True" ? "1" : "0";
+        var userRoom = "{{user.room_name}}"
+
+        $('#inputRoom option').each(function() {
+            if ($(this).text() == userRoom) {
+                $(this).attr('selected', 'selected');
+            }
+        });
+
         $('#inputClass option').each(function() {
             if ($(this).text() == userClass) {
                 $(this).attr('selected', 'selected');

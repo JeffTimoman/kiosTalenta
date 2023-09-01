@@ -9,6 +9,20 @@ from webdata import db, app, login_manager
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+class UserRoom(db.Model):
+    __tablename__ = 'user_rooms'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True)
+    date_created = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
+    
+    @property
+    def user_count(self):
+        return User.query.filter_by(room=self.id).count()
+    
+    @property 
+    def member(self):
+        return User.query.filter_by(room=self.id).all()
+    
 class UserClass(db.Model):
     __tablename__ = 'user_class'
     id = db.Column(db.Integer, primary_key=True)
@@ -21,6 +35,10 @@ class UserClass(db.Model):
     def user_count(self):
         return User.query.filter_by(user_class_id=self.id).count()
 
+    @property
+    def member(self):
+        result = User.query.filter_by(user_class_id=self.id).all()
+        return result
     def __repr__(self):
         return f"UserClass('{self.name}')"
 
@@ -54,16 +72,24 @@ class User(db.Model, UserMixin):
     #2 : CUSTOMER
     
     phone = db.Column(db.String(20), default=None)
-    room = db.Column(db.String(10), default=None)
+    room = db.Column(db.Integer(), db.ForeignKey('user_rooms.id', ondelete='SET NULL'), default=None)
     profile_picture = db.Column(db.String(50), default="default.png")
     
     user_class_id = db.Column(db.Integer, db.ForeignKey('user_class.id', ondelete='CASCADE'), default=None)
-
+    
     @property
     def user_class_name(self):
         result = UserClass.query.filter_by(id=self.user_class_id).first()
-        return self.result.name
+        return result.name
     
+    @property
+    def room_name(self):
+        result = UserRoom.query.filter_by(id=self.room).first()
+        if result is None:
+            return "----"
+        return result.name
+    
+
     def __repr__(self):
         return f"User('{self.name}', '{self.email}', '{self.user_type}', '{self.active}')"
     

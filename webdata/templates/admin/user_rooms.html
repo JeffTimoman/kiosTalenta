@@ -15,55 +15,56 @@
     }
 </style>
 
-
-<div class="modal fade" id="editClassModal" tabindex="-1" role="dialog" aria-labelledby="editClassModalLabel" aria-hidden="true">
+<div class="modal fade" id="editRoomModal" tabindex="-1" role="dialog" aria-labelledby="editClassModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editGroupModalLabel">Edit Class</h5>
+                <h5 class="modal-title" id="editRoomModalLabel">Edit Room</h5>
                 <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="?action=edit">
-                {{ editClassForm.csrf_token }}
-                {{ editClassForm.id(id="classId", type="hidden") }}
+                {{ editRoomForm.csrf_token }}
+                {{ editRoomForm.id(id="roomId", type="hidden") }}
                 <div class="modal-body">
                     <div class="mb-0">
-                        <label class="mb-1 small text-muted" for="formGroupName">Class Name</label>
-                        {{ editClassForm.name(class="form-control", placeholder="Enter class name...", id="className")}}
+                        <label class="mb-1 small text-muted" for="formGroupName">Room Name</label>
+                        {{ editRoomForm.name(class="form-control", placeholder="Enter room name....", id="roomName")}}
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-danger-soft text-danger" type="button" data-bs-dismiss="modal">Cancel</button>
                 </form>
-                {{ editClassForm.submit(class="btn btn-primary-soft text-primary")}}
+                {{ editRoomForm.submit(class="btn btn-primary-soft text-primary")}}
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="addClassModal" tabindex="-1" role="dialog" aria-labelledby="editClassModalLabel" aria-hidden="true">
+<div class="modal fade" id="addRoomModal" tabindex="-1" role="dialog" aria-labelledby="editClassModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addClassModalLabel">Add Class</h5>
+                <h5 class="modal-title" id="addRoomModalLabel">Add Room</h5>
                 <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="?action=add">
-                {{ addClassForm.csrf_token }}
+                {{ addRoomForm.csrf_token }}
                 <div class="modal-body">
                     <div class="mb-0">
-                        <label class="mb-1 small text-muted" for="formGroupName">Class Name</label>
-                        {{ addClassForm.name(class="form-control", placeholder="Enter class name...", id="")}}
+                        <label class="mb-1 small text-muted" for="formGroupName">Room Name</label>
+                        {{ addRoomForm.name(class="form-control", placeholder="Enter room name...")}}
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-danger-soft text-danger" type="button" data-bs-dismiss="modal">Cancel</button>
                 </form>
-                {{ addClassForm.submit(class="btn btn-primary-soft text-primary")}}
+                {{ addRoomForm.submit(class="btn btn-primary-soft text-primary")}}
             </div>
         </div>
     </div>
 </div>
+
+
 
 <header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
     <div class="container-xl px-4">
@@ -71,8 +72,8 @@
             <div class="row align-items-center justify-content-between pt-3">
                 <div class="col-auto mb-3">
                     <h1 class="page-header-title">
-                        <div class="page-header-icon"><i data-feather="globe"></i></div>
-                        User Classes
+                        <div class="page-header-icon"><i data-feather="home"></i></div>
+                        User Rooms
                     </h1>
                 </div>
                 <div class="col-12 col-xl-auto mb-3">
@@ -85,19 +86,20 @@
                         <!-- arrow-left -->
                         User Profiles
                     </a>
-                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_rooms')}}">
-                        <i class="me-1" data-feather="home"></i>
-                        Manage Rooms
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="globe"></i>
+                        Manage Classes
                     </a>
                     <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.registration_profiles')}}">
                         <i class="me-1" data-feather="users"></i>
                         Registration Profiles
                     </a>
-                    <button class="btn btn-sm btn-light text-primary" type="button" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                    
+                    <button class="btn btn-sm btn-light text-primary" type="button" data-bs-toggle="modal" data-bs-target="#addRoomModal">
                         <i class="me-1" data-feather="plus"></i>
-                        Add Class
+                        Add Room
                     </button>
-                    <a class="btn btn-sm btn-light text-primary" href="">
+                    <a class="btn btn-sm btn-light text-primary" href="#{{url_for('main.index')}}">
                         <i class="me-1" data-feather="arrow-left"></i>
                         <!-- arrow-left -->
                         Back to Dashboard
@@ -127,8 +129,8 @@
     <div class="card mb-4">
         <!-- <div class="card-header">
         </div> -->
-        <div class="card-body" id="userClasses">
-            <table id="userClassesTable"->
+        <div class="card-body" id="userRooms">
+            <table id="userRoomsTable"->
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -148,20 +150,20 @@
                     </tr>
                 </tfoot>
                 <tbody>
-                    {% for user_class in classes %}
+                    {% for room in rooms %}
                         <tr>
-                            <td>{{user_class.id}}</td>
-                            <td><a href="{{url_for('admin.user_class', id=user_class.id)}}" class="link_table  ">{{user_class.name}}</a></td>
-                            <td>{{user_class.user_count}}</td>
-                            <td>{{user_class.date_created}}</td>
+                            <td>{{room.id}}</td>
+                            <td><a href="{{url_for('admin.user_room', id=room.id)}}" class="link_table  ">{{room.name}}</a></td>
+                            <td>{{room.user_count}}</td>
+                            <td>{{room.date_created}}</td>
                             <td>
-                                <button class="btn btn-datatable btn-icon btn-transparent-dark me-2 edit-button" type="button" data-bs-toggle="modal" data-bs-target="#editClassModal">
+                                <button class="btn btn-datatable btn-icon btn-transparent-dark me-2 edit-button" type="button" data-bs-toggle="modal" data-bs-target="#editRoomModal">
                                     <i data-feather="edit">E</i>
                                 </button>
                                                 
 
                                 <button class="btn btn-datatable btn-icon btn-transparent-dark">
-                                    <a href="{{url_for('admin.delete_class', id=user_class.id)}}" class="btn btn-datatable btn-icon btn-transparent-dark">
+                                    <a href="{{url_for('admin.delete_room', id=room.id)}}" class="btn btn-datatable btn-icon btn-transparent-dark">
                                         <i data-feather="trash-2">D</i>
                                     </a>
                                     
@@ -185,7 +187,7 @@
     import {
         DataTable
     }from "{{ url_for('static', filename='dist/js/module.js') }}";
-    window.dt = new DataTable("#userClassesTable", {
+    window.dt = new DataTable("#userRoomsTable", {
         perPageSelect: [5, 10, 25, ["All", -1]],
         columns:[
         {
@@ -203,16 +205,14 @@
 
 <script>
     $(document).ready(function(){
-        $('#editClassModal').on('show.bs.modal', function (event) {
+        $('#editRoomModal').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget)
-
             var row = button.closest('tr')
-
             var id = row.find('td:eq(0)').text()
             var name = row.find('td:eq(1)').text()
 
-            $('#className').val(name)
-            $('#classId').val(id)
+            $('#roomName').val(name)
+            $('#roomId').val(id)
         })
     })
 </script>

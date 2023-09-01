@@ -53,6 +53,10 @@
                         <i class="me-1" data-feather="globe"></i>
                         Manage Classes
                     </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_rooms')}}">
+                        <i class="me-1" data-feather="home"></i>
+                        Manage Rooms
+                    </a>
                     <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.registration_profiles')}}">
                         <i class="me-1" data-feather="users"></i>
                         Registration Profiles
@@ -169,7 +173,7 @@
                             {% if user.room == None %}
                                 <td>-</td>
                             {% else %}
-                                <td>{{user.room}}</td>
+                                <td>{{user.room_name}}</td>
                             {% endif %}
                             <td>{{user.date_created}}</td>
                             {% if user.last_login%}

@@ -4,7 +4,7 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 from wtforms_sqlalchemy.fields import QuerySelectField
 from flask_wtf.file import FileAllowed
 from flask_login import current_user
-from webdata.models import User, UserClass
+from webdata.models import User, UserClass, UserRoom
 import re
 
 class EditUserForm(FlaskForm):
@@ -17,13 +17,7 @@ class EditUserForm(FlaskForm):
         Length(min=10, max=13),
         Regexp(phone_regex, message="Phone number must be a 10-digit number")
     ])
-    room_regex = r'^(A|B|AB)[0-9]{3}$'
-    # Adjust the regex according to your phone number format
-    room = StringField('Room', validators=[
-        DataRequired(),
-        Length(min=4, max=5),
-        Regexp(room_regex, message="Room must be a 4-digit/5-digit number")
-    ])
+    room = QuerySelectField(query_factory=lambda: UserRoom.query.all(), get_label="name")
     user_type = SelectField('User Type', choices=[('0', 'Administrator'), ('1', 'Cashier'), ('2', 'Customer')])
     user_class = QuerySelectField(query_factory=lambda: UserClass.query.all(), get_label="name")
     profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
@@ -41,13 +35,7 @@ class AddUserForm(FlaskForm):
         Length(min=10, max=13),
         Regexp(phone_regex, message="Phone number must be a 10-digit number")
     ])
-    room_regex = r'^(A|B|AB)[0-9]{3}$'
-    # Adjust the regex according to your phone number format
-    room = StringField('Room', validators=[
-        DataRequired(),
-        Length(min=4, max=5),
-        Regexp(room_regex, message="Room must be a 4-digit/5-digit number")
-    ])
+    room = QuerySelectField(query_factory=lambda: UserRoom.query.all(), get_label="name")
     user_type = SelectField('User Type', choices=[('0', 'Administrator'), ('1', 'Cashier'), ('2', 'Customer')], default='2')
     user_class = QuerySelectField(query_factory=lambda: UserClass.query.all(), get_label="name")
     profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
@@ -67,5 +55,21 @@ class ChangeUserPasswordForm(FlaskForm):
             raise ValidationError('Password does not match')
         
 class EditClassForm(FlaskForm):
+    id = StringField('ID', validators=[DataRequired(), Length(min=3, max=50)])
     name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
     submit = SubmitField('Save Changes')
+    
+
+class AddClassForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
+    submit = SubmitField('Add Class')
+
+class EditRoomForm(FlaskForm):
+    id = StringField('ID', validators=[DataRequired(), Length(min=3, max=50)])
+    name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
+    submit = SubmitField('Save Changes')
+    
+class AddRoomForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
+    submit = SubmitField('Add Room')
+    

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, url_for, flash, redirect, request, abort, jsonify, make_response
+from flask import Blueprint, render_template, url_for, flash, redirect, request, abort, jsonify, make_response, session
 
 from webdata import db, bcrypt, app
 from flask_login import login_user, current_user, logout_user, login_required
@@ -8,9 +8,9 @@ from flask_cors import CORS, cross_origin
 
 from werkzeug.utils import secure_filename
 
-from webdata.models import User, RegistrationProfile, UserClass
+from webdata.models import User, RegistrationProfile, UserClass, UserRoom
 
-from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm
+from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm
 
 from pytz import timezone
 from datetime import datetime
@@ -34,7 +34,6 @@ def save_image(form_picture, user_id):
     return pic_name
 
 @admin.route("/")
-@admin.route("/users")
 @login_required
 def index():
     if current_user.user_type != 0:
@@ -42,14 +41,113 @@ def index():
     return render_template('admin/index.html')
 
 
-@admin.route("/users/user_classes")
+
+
+
+
+
+
+
+
+
+@admin.route("/users/user_classes", methods=['GET', 'POST'])
 @login_required
 def user_classes():
     if current_user.user_type != 0:
         abort(403)
     classes = UserClass.query.all()
+    
     editClassForm = EditClassForm()
-    return render_template('admin/user_classes.html', classes=classes, editClassForm=editClassForm)
+    addClassForm = AddClassForm()
+    if request.method == 'POST':
+        action = request.args.get('action')
+        if action == 'edit':
+            name = editClassForm.name.data
+            id = editClassForm.id.data
+            
+            data = UserClass.query.filter_by(id=id).first()
+            check_name = UserClass.query.filter_by(name=name).first()
+            
+            if data is None:
+                flash(f"Class not found!", 'danger')
+                return redirect(url_for('admin.user_classes'))
+            if data.name == name:
+                flash(f"No changes made!", 'info')
+                return redirect(url_for('admin.user_classes'))
+            if check_name is not None:
+                flash(f"Class {name} already exists!", 'danger')
+                return redirect(url_for('admin.user_classes'))
+            
+            if name == '' or name == None:
+                flash(f"Name cannot be empty!", 'danger')
+                return redirect(url_for('admin.user_classes'))
+            
+            if len(name) < 3 or len(name) > 50:
+                flash(f"Name must be between 3 and 50 characters!", 'danger')
+                return redirect(url_for('admin.user_classes'))
+            
+            data.name = name
+            db.session.commit()
+            flash(f"Class with id : {id} has been updated!", 'success')
+            return redirect(url_for('admin.user_classes'))
+        if action == 'add':
+            name = addClassForm.name.data
+            
+            check_name = UserClass.query.filter_by(name=name).first()
+            if check_name is not None:
+                flash(f"Class {name} already exists!", 'danger')
+                return redirect(url_for('admin.user_classes'))
+            
+            if name == '' or name == None:
+                flash(f"Name cannot be empty!", 'danger')
+                return redirect(url_for('admin.user_classes'))
+            
+            if len(name) < 3 or len(name) > 50:
+                flash(f"Name must be between 3 and 50 characters!", 'danger')
+                return redirect(url_for('admin.user_classes'))
+            
+            data = UserClass(name=name)
+            db.session.add(data)
+            db.session.commit()
+            flash(f"Class {name} has been added!", 'success')
+        
+    return render_template('admin/user_classes.html', classes=classes, editClassForm=editClassForm, addClassForm=addClassForm)
+
+@admin.route("/users/user_classes/delete_class/<int:id>", methods=['POST', 'GET'])
+@login_required
+def delete_class(id):
+    if current_user.user_type != 0:
+        abort(403)
+    # return redirect(url_for('admin.user_classes'))
+    user_class = UserClass.query.filter_by(id=id).first()
+    if user_class is None:
+        flash(f"User class not found!", 'danger')
+        return redirect(url_for('admin.user_classes'))
+    
+    if request.method == 'POST':
+        csrf_token = session.get('csrf_token')
+        if not csrf_token or csrf_token != request.form.get('csrf_token'):
+            abort(403)
+        db.session.delete(user_class)
+        db.session.commit()
+        flash(f"User class {user_class.name} has been deleted!", 'success')
+        return redirect(url_for('admin.user_classes'))
+    return render_template('admin/delete_class.html', user_class=user_class)
+    
+
+@admin.route("/users/user_classes/user_class/<int:id>", methods=['GET', 'POST'])
+@login_required
+def user_class(id):
+    if current_user.user_type != 0:
+        abort(403)
+        
+    user_class = UserClass.query.filter_by(id=id).first()
+    if user_class is None:
+        flash(f"User class not found!", 'danger')
+        return redirect(url_for('admin.user_classes'))
+    
+    
+    return render_template('admin/user_class.html', user_class=user_class)
 
 @admin.route("/users/registration_profiles")
 @login_required
@@ -85,7 +183,7 @@ def add_user():
         
         if role == '2' or role == 2:
             phone = addUserForm.phone.data
-            room = addUserForm.room.data
+            room = addUserForm.room.data.id
             user_class = addUserForm.user_class.data.id
         
         check_email = User.query.filter_by(email=email).first()
@@ -136,17 +234,9 @@ def add_user():
                 flash(f"Room cannot be empty!", 'danger')
                 return redirect(url_for('admin.add_user'))
             
-            room_pattern = r'^(A|B|AB)[0-9]{3}$'
-            if len(room) < 4 or len(room) > 5:
-                flash(f"Room must be between 4 and 5 characters!", 'danger')
-                return redirect(url_for('admin.add_user'))
-            
-            if not re.match(room_pattern, room):
-                flash(f"Room must be a 4-digit/5-digit number!", 'danger')
-                return redirect(url_for('admin.add_user'))
-            
-            if user_class == None or user_class == '':
-                flash(f"Class cannot be empty!", 'danger')
+            check_room = UserRoom.query.filter_by(id=room).first()
+            if check_room is None:
+                flash(f"Room {room.name} does not exist!", 'danger')
                 return redirect(url_for('admin.add_user'))
         
         user = None
@@ -181,27 +271,18 @@ def add_user():
 
     return render_template('admin/add_user.html', addUserForm=addUserForm)
 
-@admin.route("/users/user_profiles")
+@admin.route("/users")
 @login_required
 def user_profiles():
     today_date = [datetime.now(timezone('Asia/Jakarta')).strftime("%A"), datetime.now(timezone('Asia/Jakarta')).strftime(" · %B %d, %Y · %I:%M %p")]
-    users = User.query.with_entities(
-        User.id,
-        User.name,
-        User.email,
-        User.date_created,
-        User.last_login,
-        User.last_ip,
-        User.user_type,
-        User.active,
-        User.room
-    ).all()
+    users = User.query.all()
     flash(f"You are logged in as {current_user.name.title()}", 'success')
     return render_template('admin/user_profiles.html', today_date=today_date, users=users)
 
 @admin.route('/users/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def edit_user(user_id):
+    prev = request.referrer
     if current_user.user_type != 0:
         abort(403)
     user = User.query.filter_by(id=user_id).first()
@@ -222,9 +303,8 @@ def edit_user(user_id):
         
         if user.user_type == 2:
             phone = editUserForm.phone.data
-            room = editUserForm.room.data
+            room = editUserForm.room.data.id
             user_class = editUserForm.user_class.data.id
-        
         if active == '1':
             active = True
         else:
@@ -232,7 +312,7 @@ def edit_user(user_id):
             
         if str(name) == str(user.name) and str(email) == str(user.email) and str(phone) == str(user.phone) and str(room) == str(user.room) and str(role) == str(user.user_type) and str(user_class) == str(user.user_class_id) and str(active) == str(user.active) and profile_picture.filename == '':
             flash(f"No changes made!", 'info')
-            return redirect(url_for('admin.user_profiles'))
+            return redirect(prev)
         
         if email == None or email == '': 
             flash(f"Email cannot be empty!", 'danger')
@@ -275,18 +355,14 @@ def edit_user(user_id):
                 flash(f"Phone number must be a 10-digit number!", 'danger')
                 return redirect(url_for('admin.edit_user', user_id=user_id))
             
-            room_pattern = r'^(A|B|AB)[0-9]{3}$'
             if room == None or room == '':
                 flash(f"Room cannot be empty!", 'danger')
                 return redirect(url_for('admin.edit_user', user_id=user_id))
             
-            if len(room) < 4 or len(room) > 5:
-                flash(f"Room must be between 4 and 5 characters!", 'danger')
+            check_room = UserRoom.query.filter_by(id=room).first()
+            if check_room is None:
+                flash(f"Room {room.name} does not exist!", 'danger')
                 return redirect(url_for('admin.edit_user', user_id=user_id))
-            
-            if not re.match(room_pattern, room):
-                flash(f"Room must be a 4-digit/5-digit number!", 'danger')
-                return redirect(url_for('admin.edit_user', user_id=user_id))  
                 
         ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
         
@@ -321,7 +397,8 @@ def edit_user(user_id):
         # print(user.email, user.name, user.phone, user.room, user.user_type, user.user_class_id, user.active, user.profile_picture)
         db.session.commit()
         flash(f"User {user.name.title()} has been updated!", 'success')
-        return redirect(url_for('admin.edit_user', user_id=user_id))
+        # return redirect(url_for('admin.edit_user', user_id=user_id))
+        return redirect(prev)
         
     
     return render_template('admin/edit_user.html', user=user, editUserForm=editUserForm)
@@ -355,6 +432,106 @@ def change_password(user_id):
     
     return render_template('admin/change_password.html', user=user, changeUserPasswordForm=changeUserPasswordForm)
 
+@admin.route('/users/user_rooms', methods=['GET', 'POST'])
+@login_required
+def user_rooms():
+    if current_user.user_type != 0:
+        abort(403)
+    
+    rooms = UserRoom.query.all()
+    editRoomForm = EditRoomForm()
+    addRoomForm = AddRoomForm()
+    
+    if request.method == 'POST':
+        action = request.args.get('action')
+        
+        if action == 'add':
+            name = addRoomForm.name.data
+            if name == '' or name == None:
+                flash(f"Name cannot be empty!", 'danger')
+                return redirect(url_for('admin.user_rooms'))
+            
+            if len(name) < 3 or len(name) > 50:
+                flash(f"Name must be between 3 and 50 characters!", 'danger')
+                return redirect(url_for('admin.user_rooms'))
+            
+            check_name = UserRoom.query.filter_by(name=name).first()
+            if check_name is not None:
+                flash(f"Room {name} already exists!", 'danger')
+                return redirect(url_for('admin.user_rooms'))
+            
+            room = UserRoom(name=name)
+            db.session.add(room)
+            db.session.commit()
+            flash(f"Room {name} has been added!", 'success')
+            return redirect(url_for('admin.user_rooms'))
+        
+        if action == 'edit':
+            name = editRoomForm.name.data
+            id = editRoomForm.id.data
+            
+            if name == '' or name == None:
+                flash(f"Name cannot be empty!", 'danger')
+                return redirect(url_for('admin.user_rooms'))
+            
+            if len(name) < 3 or len(name) > 50:
+                flash(f"Name must be between 3 and 50 characters!", 'danger')
+                return redirect(url_for('admin.user_rooms'))
+            
+            data = UserRoom.query.filter_by(id=id).first()
+            check_name = UserRoom.query.filter_by(name=name).first()
+            
+            if data is None:
+                flash(f"Room not found!", 'danger')
+                return redirect(url_for('admin.user_rooms'))
+            
+            if data.name == name:
+                flash(f"No changes made!", 'info')
+                return redirect(url_for('admin.user_rooms'))
+            
+            if check_name is not None:
+                flash(f"Room {name} already exists!", 'danger')
+                return redirect(url_for('admin.user_rooms'))
+            
+            data.name = name
+            db.session.commit()
+            flash(f"Room with id : {id} has been updated!", 'success')
+            return redirect(url_for('admin.user_rooms'))
+    return render_template('admin/user_rooms.html', rooms=rooms, editRoomForm=editRoomForm, addRoomForm=addRoomForm)
+
+@admin.route('/users/user_room/<int:id>', methods=['GET', 'POST'])
+@login_required
+def user_room(id):
+    if current_user.user_type != 0:
+        abort(403)
+        
+    room = UserRoom.query.filter_by(id=id).first()
+    if room is None:
+        flash(f"Room not found!", 'danger')
+        return redirect(url_for('admin.user_rooms'))
+    
+    return render_template('admin/user_room.html', room=room)
+
+@admin.route('/users/user_rooms/delete_room/<int:id>', methods=['GET', 'POST'])
+@login_required
+def delete_room(id):
+    if current_user.user_type != 0:
+        abort(403)
+    room = UserRoom.query.filter_by(id=id).first()
+    if room is None:
+        flash(f"Room not found!", 'danger')
+        return redirect(url_for('admin.user_rooms'))
+    
+    if request.method == 'POST':
+        csrf_token = session.get('csrf_token')
+        if not csrf_token or csrf_token != request.form.get('csrf_token'):
+            abort(403)
+        db.session.delete(room)
+        db.session.commit()
+        flash(f"Room {room.name} has been deleted!", 'success')
+        return redirect(url_for('admin.user_rooms'))
+    
+    return render_template('admin/delete_room.html', room=room)
 
 @admin.route('/api/get_registration_profiles', methods=['GET'])
 def get_registration_profiles():
@@ -460,8 +637,11 @@ def approve_registration_profile():
             register_info = RegistrationProfile.query.filter_by(id=tmp).first()
             if register_info is None:
                 continue
+            room_id = UserRoom.query.filter_by(name=register_info.room).first().id
+            if room_id is None:
+                continue
             class_id = UserClass.query.filter_by(name=register_info.user_class).first().id
-            user = User(name=register_info.name, email=register_info.email, password=register_info.password, active=1, phone=register_info.phone, room=register_info.room, user_class_id=class_id, date_created=datetime.now(timezone('Asia/Jakarta')))
+            user = User(name=register_info.name, email=register_info.email, password=register_info.password, active=1, phone=register_info.phone, room=room_id, user_class_id=class_id, date_created=datetime.now(timezone('Asia/Jakarta')))
             db.session.add(user)
             db.session.delete(register_info)
             db.session.commit()

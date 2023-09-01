@@ -42,7 +42,8 @@ def login():
             if user:
                 flash('That email is taken. Please choose a different one.', 'danger')
                 return redirect(url_for('main.login'))
-            registration = RegistrationProfile(email=registrationForm.email.data, name=registrationForm.name.data, password=str(bcrypt.generate_password_hash(registrationForm.password.data).decode('utf-8')), phone=registrationForm.phone.data, room=registrationForm.room.data, user_class=registrationForm.user_class.data.name)
+            registration = RegistrationProfile(email=registrationForm.email.data, name=registrationForm.name.data, password=str(bcrypt.generate_password_hash(registrationForm.password.data).decode('utf-8')), phone=registrationForm.phone.data, room=registrationForm.room.data.name, user_class=registrationForm.user_class.data.name)
+            print(registration.room)
             db.session.add(registration)
             db.session.commit()
             flash('Your account has been created! Wait for admin to approve your account', 'success')

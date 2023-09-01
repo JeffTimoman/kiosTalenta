@@ -18,6 +18,6 @@ def createsuperuser():
     
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000, host='10.68.101.101')
+    app.run(debug=True, port=80, host='10.68.101.101')
 #     app.run(debug=True, port=5000, host='172.16.90.151')
 #     app.run(debug=True, port=5000, host='192.168.100.229')

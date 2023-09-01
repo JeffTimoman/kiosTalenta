@@ -17,13 +17,17 @@
                     </h1>
                 </div>
                 <div class="col-12 col-xl-auto mb-3">
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        User Profiles
+                    </a>
                     <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
                         <i class="me-1" data-feather="globe"></i>
                         Manage Classes
                     </a>
-                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
-                        <i class="me-1" data-feather="users"></i>
-                        User Profiles
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_rooms')}}">
+                        <i class="me-1" data-feather="home"></i>
+                        Manage Rooms
                     </a>
                     
                     <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.index')}}">

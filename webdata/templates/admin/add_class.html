@@ -1,0 +1,65 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+<style>
+    .link_table:visited{
+        color: blue;
+    }
+    .link_table:hover{
+        color: blueviolet;
+        text-decoration: none;
+    }
+</style>
+
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-xl px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="globe"></i></div>
+                        Add Class
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <!-- <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="globe"></i>
+                        Manage Classes
+                    </a> -->
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.registration_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        Registration Profiles
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        <!-- arrow-left -->
+                        User Profiles
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.index')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        <!-- arrow-left -->
+                        Back to User Classes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}

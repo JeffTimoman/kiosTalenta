@@ -1,0 +1,139 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+<style>
+    .link_table:visited{
+        color: blue;
+    }
+    .link_table:hover{
+        color: blueviolet;
+        text-decoration: none;
+    }
+</style>
+
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-xl px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="globe"></i></div>
+                        Room Details
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <!-- <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="globe"></i>
+                        Manage Classes
+                    </a> -->
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        <!-- arrow-left -->
+                        User Profiles
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_rooms')}}">
+                        <i class="me-1" data-feather="home"></i>
+                        Manage Rooms
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.registration_profiles')}}">
+                        <i class="me-1" data-feather="users"></i>
+                        Registration Profiles
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        <!-- arrow-left -->
+                        Back to User Classes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-fluid px-4">
+    <div class="card bg-gradient-primary-to-secondary mb-4">
+        <div class="card-header">
+            <h4 class="text-white">
+                You are about to delete this class. Are you sure you want to continue?
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="me-3">
+                    <div class="small text-white-50">Class Name:</div>
+                    <div class="h1 text-white">{{user_class.name}}</div>
+                </div>
+                <div class="text-white">{{user_class.user_count}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            These users are going to be affected by this action. 
+        </div>
+        <div class="card-body">
+            <div class="small text-muted mb-2">Members:</div>
+            <div class="row">
+                {% if user_class.member %}
+                {% for user in user_class.member %}
+                <div class="col-lg-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-lg"><img class="avatar-img img-fluid" src="{{url_for('static', filename='/profile_pictures/')}}{{user.profile_picture}}" /></div>
+                        <div class="ms-3">
+                            <a href="{{url_for('admin.edit_user', user_id=user.id)}}"><div class="fs-4 text-dark fw-500">{{user.name}}</div></a>
+                            <div class="small text-muted">{{user.user_class_name}}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                    <h4 class="text-center">There is no member in this class.</h4>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="card mt-3">
+        <div class="card-body text-center">
+            <h4>These users <span style="color:red">WILL BE DELETED</span> when this class is deleted.</h4>
+            <h4><span style="color:red">THIS PROCESS CANNOT BE REVERSED</span></h4>
+        </div>
+    </div>
+    <style>
+        .tmp:visited{
+            color: white;
+        }
+        .tmp:hover{
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+    <form action="" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <a href="{{url_for('admin.user_classes')}}" class="tmp btn btn-warning">Cancel</a>
+                <button class="btn btn-danger" type="submit">Delete</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}
