@@ -8,9 +8,9 @@ from flask_cors import CORS, cross_origin
 
 from werkzeug.utils import secure_filename
 
-from webdata.models import User, RegistrationProfile, UserClass, UserRoom
+from webdata.models import User, RegistrationProfile, UserClass, UserRoom, Product
 
-from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm
+from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm, AddProductForm
 
 from pytz import timezone
 from datetime import datetime
@@ -42,11 +42,28 @@ def index():
 
 
 
+@admin.route("/products")
+@login_required
+def products():
+    if current_user.user_type != 0:
+        abort(403)
+        
+    products = Product.query.all()
+    return render_template('admin/products.html', products=products)
 
+@admin.route("/products/add_product", methods=['GET', 'POST'])
+@login_required
+def add_product():
+    if current_user.user_type != 0:
+        abort(403)
+        
+    addProductForm = AddProductForm()
+    return render_template('admin/add_product.html', addProductForm=addProductForm)
 
-
-
-
+@admin.route("/products/product_types")
+@login_required
+def product_types():
+    return "test"
 
 
 

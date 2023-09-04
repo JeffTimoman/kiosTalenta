@@ -1,0 +1,173 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+<style>
+    .link_table:visited{
+        color: blue;
+    }
+    .link_table:hover{
+        color: blueviolet;
+        text-decoration: none;
+    }
+</style>
+
+
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-xl px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="box"></i></div>
+                        Product Details
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <!-- <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="globe"></i>
+                        Manage Classes
+                    </a> -->
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.product_types')}}">
+                        <i class="me-1" data-feather="tag"></i>
+                        <!-- arrow-left -->
+                        Manage Product Type
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.add_product')}}">
+                        <i class="me-1" data-feather="plus"></i>
+                        Add Product
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.index')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        <!-- arrow-left -->
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-3">
+    <div class="row">
+        <div class="col" id="alertCol">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+
+                    {{ message }}
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    <div class="card mb-4">
+        <!-- <div class="card-header">
+        </div> -->
+        <div class="card-body" id="products">
+            <table id="productsTable"->
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Barcode</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Sold</th>
+                        <th>Last Modified</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Barcode</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Sold</th>
+                        <th>Last Modified</th>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>{{product.id}}</td>
+                            <td>{{product.code}}</td>
+                            <td>{{product.barcode}}</td>
+                            <td>{{product.name}}</td>
+                            <td>{{product.product_type_name}}</td>
+                            <td>{{product.price}}</td>
+                            <td>{{product.quantity}}</td>
+                            <td>{{product.sold}}</td>
+                            <td>{{product.last_modified}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<script type="module">
+    import {
+        DataTable
+    }from "{{ url_for('static', filename='dist/js/module.js') }}";
+    window.dt = new DataTable("#productsTable", {
+        perPageSelect: [5, 10, 25, ["All", -1]],
+        columns:[
+        {
+            select: 2,
+            sortSequence: ["desc", "asc"]
+        },
+        {
+            select: 4,
+            sortable: false
+        }
+        ],
+        scrollY: '50vh'
+    });
+</script>
+
+<script>
+    $(document).ready(function(){
+        $('#editClassModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget)
+
+            var row = button.closest('tr')
+
+            var id = row.find('td:eq(0)').text()
+            var name = row.find('td:eq(1)').text()
+
+            $('#className').val(name)
+            $('#classId').val(id)
+        })
+    })
+</script>
+
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}

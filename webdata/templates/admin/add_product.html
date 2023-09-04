@@ -1,0 +1,115 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+<style>
+    .link_table:visited{
+        color: blue;
+    }
+    .link_table:hover{
+        color: blueviolet;
+        text-decoration: none;
+    }
+</style>
+
+
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-xl px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="box"></i></div>
+                        Product Details
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <!-- <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="globe"></i>
+                        Manage Classes
+                    </a> -->
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.product_types')}}">
+                        <i class="me-1" data-feather="tag"></i>
+                        <!-- arrow-left -->
+                        Manage Product Type
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.products')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        <!-- arrow-left -->
+                        Back to Products 
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-4">
+    <form action="" method="POST">
+        <div class="row">
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-header">
+                        Main Details
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="inputCode">Product Code</label>
+                                {{ addProductForm.code(class="form-control", id="productCode", type="text", placeholder="AL157 | BX889 | UT199") }}
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="inputBarcode">Product Barcode</label>
+                                {{ addProductForm.barcode(class="form-control", id="productBarcode", type="text", placeholder="Enter barcode (use scanner)") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header">
+                        Other Details
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="inputName">Product Name</label>
+                                {{ addProductForm.name(class="form-control", id="productName", type="text", placeholder="Enter product name") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="inputType">Product Type</label>
+                                {{ addProductForm.type(class="form-control", id="productType", type="text", placeholder="Select product type") }}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="inputPrice">Product Price</label>
+                                {{ addProductForm.price(class="form-control", id="productPrice", type="text", placeholder="Enter product price") }}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="inputStock">Product Stock</label>
+                                {{ addProductForm.stock(class="form-control", id="productStock", type="text", placeholder="Enter product stock") }}
+                            </div>  
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}

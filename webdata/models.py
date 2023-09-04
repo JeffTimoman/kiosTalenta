@@ -24,7 +24,7 @@ class UserRoom(db.Model):
         return User.query.filter_by(room=self.id).all()
     
 class UserClass(db.Model):
-    __tablename__ = 'user_class'
+    __tablename__ = 'user_class'   
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=True)
     date_created = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
@@ -99,7 +99,6 @@ class ProductType(db.Model):
     name = db.Column(db.String(30))
     date_created = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
 
-    product = db.relationship('Product', backref='product_type', cascade='all, delete-orphan')
     def __repr__(self):
         return f"ProductType('{self.name}')"
     
@@ -107,15 +106,22 @@ class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
-    product_type_id = db.Column(db.Integer, db.ForeignKey('product_types.id', ondelete='CASCADE'))
-    quantity = db.Column(db.Integer)
+    product_type = db.Column(db.Integer, db.ForeignKey('product_types.id', ondelete='CASCADE'))
+    
+    sold = db.Column(db.Integer, default=0)
+    stock = db.Column(db.Integer)
     price = db.Column(db.Integer)
 
-    product_code = db.Column(db.String(50))
+    code = db.Column(db.String(50))
     barcode = db.Column(db.String(50))
 
     date_created = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
-    date_modified = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
+    last_modified = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
+    
+    @property
+    def product_type_name(self):
+        result = ProductType.query.filter_by(id=self.product_type).first()
+        return result.name
 
 class ProductTransaction(db.Model):
     __tablename__ = 'product_transactions'

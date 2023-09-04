@@ -1,10 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, FileField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, FileField, IntegerField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, Regexp
 from wtforms_sqlalchemy.fields import QuerySelectField
 from flask_wtf.file import FileAllowed
 from flask_login import current_user
-from webdata.models import User, UserClass, UserRoom
+from webdata.models import User, UserClass, UserRoom, ProductType
 import re
 
 class EditUserForm(FlaskForm):
@@ -73,3 +73,11 @@ class AddRoomForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
     submit = SubmitField('Add Room')
     
+class AddProductForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
+    code = StringField('Code', validators=[DataRequired(), Length(min=3, max=50)])
+    barcode = StringField('Barcode', validators=[DataRequired(), Length(min=3, max=50)])
+    stock = IntegerField('Stock', validators=[DataRequired()])
+    price = IntegerField('Price', validators=[DataRequired()])
+    product_type = QuerySelectField(query_factory=lambda: ProductType.query.all(), get_label="name")
+    submit = SubmitField('Add Product')
