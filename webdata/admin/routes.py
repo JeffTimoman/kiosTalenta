@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 
 from webdata.models import User, RegistrationProfile, UserClass, UserRoom, Product
 
-from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm, AddProductForm
+from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm, AddProductForm, AddStockForm
 
 from pytz import timezone
 from datetime import datetime
@@ -56,16 +56,74 @@ def products():
 def add_product():
     if current_user.user_type != 0:
         abort(403)
-        
+    
     addProductForm = AddProductForm()
+    
+    if request.method == 'POST':
+        if addProductForm.validate_on_submit():
+            name = addProductForm.name.data
+            price = addProductForm.price.data
+            stock = addProductForm.stock.data
+            product_type = addProductForm.product_type.data.id
+            code = addProductForm.code.data
+            barcode = addProductForm.barcode.data
+            
+            check_barcode = Product.query.filter_by(barcode=barcode).first()
+            check_code = Product.query.filter_by(code=code).first()
+            if check_barcode is not None:
+                flash(f"Barcode {barcode} already exists!", 'danger')
+                return redirect(url_for('admin.add_product'))
+            
+            if check_code is not None:
+                flash(f"Code {code} already exists!", 'danger')
+                return redirect(url_for('admin.add_product'))
+            
+            data = Product(name=name, price=price, stock=stock, product_type=product_type, code=code, barcode=barcode)
+            db.session.add(data)
+            db.session.commit()
+            flash(f"Product {name} has been added!", 'success')
+            return redirect(url_for('admin.add_product'))
+        else : 
+            for error in addProductForm.errors:
+                the_error_text = addProductForm.errors[error][0]
+                flash(f"{error} : {the_error_text}", 'danger')
+            redirect(url_for('admin.add_product'))
+        
     return render_template('admin/add_product.html', addProductForm=addProductForm)
+
+@admin.route("/products/add_stock", methods=['GET', 'POST'])
+@login_required
+def add_stock():
+    if request.method == 'POST':
+        product_barcode = request.form.get('barcode')
+        stock = request.form.get('stock')
+        
+        product = Product.query.filter_by(barcode=product_barcode).first()
+        if product is None:
+            flash(f"Product with barcode {product_barcode} not found!", 'danger')
+            return redirect(url_for('admin.add_stock_2'))
+        
+        if (int(stock) < 0):
+            flash(f"Stock must be greater than 0!", 'danger')
+            return redirect(url_for('admin.add_stock_2'))
+        
+        product.stock += int(stock)
+        db.session.commit()
+        flash(f"Stock for product {product.name} has been added!", 'success')
+    return render_template('/admin/add_stock.html')
 
 @admin.route("/products/product_types")
 @login_required
 def product_types():
     return "test"
 
-
+@admin.route("products/delete_product")
+@login_required
+def delete_product():
+    ids = request.args.getlist('id')
+    flash("This feature is not yet implemented!", "danger")
+    return redirect(url_for('admin.products'))
+    
 
 @admin.route("/users/user_classes", methods=['GET', 'POST'])
 @login_required
@@ -266,17 +324,17 @@ def add_user():
         ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
         
         if profile_picture.filename != '':
-            # output_size = (125, 125)
+            output_size = (500, 500)
             if not '.' in profile_picture.filename or profile_picture.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
                 flash(f"Profile picture must be a jpg or png file!", 'danger')
                 return redirect(url_for('admin.add_user'))
-            pic_name = str(uuid.uuid1()) + "_" + str(user.id) 
+            pic_name = str(uuid.uuid1()) + "_" + str(user.id)  + '.jpg'
             profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
             user.profile_picture = pic_name
             
-            # i = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
-            # i.thumbnail(output_size)
-            # i.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+            i = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+            i.thumbnail(output_size)
+            i.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
         else:
             user.profile_picture = 'default.png'
         print(name, email, password, active, phone, room, user_class, profile_picture)
@@ -384,6 +442,7 @@ def edit_user(user_id):
         ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
         
         if profile_picture.filename != '':
+            output_size = (500, 500)
             if not '.' in profile_picture.filename or profile_picture.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
                 flash(f"Profile picture must be a jpg or png file!", 'danger')
                 return redirect(url_for('admin.add_user'))
@@ -392,9 +451,12 @@ def edit_user(user_id):
                     os.remove(os.path.join(app.config['UPLOAD_FOLDER'], user.profile_picture))
             user.profile_picture = profile_picture.filename
             # pic_filename = secure_filename(profile_picture.filename)
-            pic_name = str(uuid.uuid1()) + "_" + str(user.id)
+            pic_name = str(uuid.uuid1()) + "_" + str(user.id) + '.jpg'
             profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
             user.profile_picture = pic_name
+            i = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+            i.thumbnail(output_size)
+            i.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
         
         user.email = email
         user.name = name
@@ -699,6 +761,29 @@ def reject_registration_profile():
             flash(f"{counter} Registration profile has been rejected", 'info')
     return make_response(jsonify({'status': 'success'}), 200)
 
+@admin.route('/api/product_detail', methods=['GET'])
+def api_get_product_detail():
+    barcode = request.args.get('barcode')
+    if not current_user.is_authenticated:
+        make_response(jsonify({'status': 403}), 403)
+    if current_user.user_type != 0:
+        make_response(jsonify({'status': 403}), 403)
+        
+    product = Product.query.filter_by(barcode=barcode).first()
+    if product is None:
+        return make_response(jsonify({'status': 404}), 404)
+    
+    data = {
+        'id' : product.id,
+        'barcode': product.barcode,
+        'name' : product.name,
+        'code' : product.code,
+        'stock' : product.stock,
+        'sold' : product.sold,
+        'price' : product.price,
+        'product_type' : product.product_type_name,
+    }
+    return make_response(jsonify({'data' : data, 'status': 200}), 200)
 
 @admin.route('/delete_user', methods=['POST', 'GET'])
 @admin.route('/delete_user', methods=['POST', 'GET'])
@@ -719,3 +804,39 @@ def delete_user():
         users.append(user)
     print(users)
     return render_template('admin/delete_user.html', ids=user_id)
+
+@admin.route('/api/get_product_data', methods=['GET', 'POST'])
+@login_required
+def api_get_product_data():
+    search = request.args.get('search')
+    page = request.args.get('page')
+
+    # Check if the search term looks like a barcode (contains only digits)
+    products_query = Product.query.filter(
+        (Product.name.ilike(f"%{search}%")) |
+        (Product.barcode.ilike(f"%{search}%"))
+    )
+
+    per_page = 10
+    products_paginated = products_query.paginate(page=int(page), per_page=per_page)
+
+    results = []
+    for product in products_paginated.items:
+        results.append({
+            'id': product.barcode,
+            'text': product.barcode + " - " + product.name 
+        })
+
+    return jsonify({
+        'results': results,
+        'pagination': {
+            'more': products_paginated.has_next
+        }
+    })
+
+
+
+@admin.route('/add_stock_name_form', methods=['POST', 'GET'])
+@login_required
+def add_stock_name_form():
+    return render_template('/admin/add_stock_name_form.html')

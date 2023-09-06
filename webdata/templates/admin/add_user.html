@@ -371,19 +371,20 @@
     $(document).ready(function(){
         $('#userRole').change(function(){
             $('#addUseFormData').empty();
+            $('#addUseFormData').fadeOut(0);
             if($(this).val() == 0){
-                $('#addUseFormData').append(adminForm);
+                $('#addUseFormData').append(adminForm).fadeIn(1000);
                 $('#addUserButton').click(function(){
                     $('#addUserForm').submit();
                 });
             }else if($(this).val() == 1){
-                $('#addUseFormData').append(cashierForm);
+                $('#addUseFormData').append(cashierForm).fadeIn(1000);
                 $('#addUserButton').click(function(){
                     $('#addUserForm').submit();
                 });
                 
             }else if($(this).val() == 2){
-                $('#addUseFormData').append(customerForm);
+                $('#addUseFormData').append(customerForm).fadeIn(1000);
                 $('#addUserButton').click(function(){
                     $('#addUserForm').submit();
                 });

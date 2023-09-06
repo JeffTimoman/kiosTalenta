@@ -1,0 +1,198 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>  
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+<style>
+    .link_table:visited{
+        color: blue;
+    }
+    .link_table:hover{
+        color: blueviolet;
+        text-decoration: none;
+    }
+</style>
+
+
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-xl px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="box"></i></div>
+                        Add Stock
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <!-- <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.user_classes')}}">
+                        <i class="me-1" data-feather="globe"></i>
+                        Manage Classes
+                    </a> -->
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.product_types')}}">
+                        <i class="me-1" data-feather="tag"></i>
+                        <!-- arrow-left -->
+                        Manage Product Type
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.add_product')}}">
+                        <i class="me-1" data-feather="plus"></i>
+                        Add Product
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.products')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        <!-- arrow-left -->
+                        Back to Products 
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-4">
+    <div class="row">
+        <div class="col" id="alertCol">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    <form action="" method="POST">
+        <div class="row">
+            <form action="" method="POST">
+                <input type="hidden" name="csrf_token" value="{{current_user[csrf_token]}}">
+                <div class="col-xl-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Product to Add Stock
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    
+                                </div>
+                                <div class="col-md-12 row">
+                                    <div class="mb-3 col-md-12">
+                                        <label for="inputName">Barcode - Name</label>
+                                        <select name="barcode" id="barcode" class="product-table form-select" required="required">
+                                        </select>
+                                    </div>
+                                    <div class="mb-3 col-md-12">
+                                        <label for="inputStock">Stock</label>
+                                        <input type="number" id="stock" name="stock" placeholder="stock" required="required" min="0" class="form-control">
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Add Stock</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-8 gx-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Product Details
+                        </div>
+                        <div class="card-body text-center" id="productDetails" >
+                            <h4>Select product first to view the details.</h4>                
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('.product-table').select2({
+            ajax: {
+                url: "{{url_for('admin.api_get_product_data')}}",
+                data: function (params) {
+                  var query = {
+                    search: params.term,
+                    page: params.page || 1
+                  }
+
+                  return query;
+                }
+              }
+        });
+
+        $('#barcode').on('change', function(){
+            var barcode = $(this).val();
+            console.log(barcode)
+            $.ajax({
+                url: "{{url_for('admin.api_get_product_detail')}}?barcode=" + barcode,
+                type: 'GET',
+                success: function(response) {
+                    if (response.status === 200) {
+                        var data = response.data;
+                        var productDetailsHtml = `
+
+
+                        <div class="w-100 d-flex flex-row justify-content-even ">
+                            <div class="border-end border-primary border-1 w-50 h-100">
+                                <div class="mb-4 mt-3 d-flex flex-col align-items-center justify-content-evenly">
+                                    <p class="mb-0" style="font-weight: 500;">ID&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </p>
+                                    <input type="text" style="font-weight: 500;" class="form-control w-50 border border-white border-2 text-white bg-primary" value="${data.id}" disabled>
+                                </div>
+                                <div class="mb-4 d-flex justify-content-evenly flex-row align-items-center">
+                                    <p class="mb-0" style="font-weight: 500;">Code &nbsp</p>
+                                    <input type="text" style="font-weight: 500;" class="form-control w-50 border border-white border-2 text-white bg-primary" value="${data.code}" disabled>
+                                    
+                                </div>
+                                <div class="mb-4 d-flex justify-content-evenly flex-row align-items-center">
+                                    <p class="mb-0" style="font-weight: 500;">Type&nbsp&nbsp&nbsp</p>
+                                    <input type="text" style="font-weight: 500;" class="form-control w-50 border border-white border-2 text-white bg-primary" value="${data.product_type}" disabled>
+                                </div>
+                            </div>
+                            <div class="w-50">
+                                <div class="mb-4 mt-3 d-flex justify-content-evenly flex-row align-items-center">
+                                    <p class="mb-0" style="font-weight: 500;">Price&nbsp&nbsp&nbsp&nbsp</p>
+                                    <input type="text" style="font-weight: 500;" class="form-control w-50 border border-white border-2 text-white bg-primary" value="${data.price}" disabled>
+                                </div>
+                                <div class="mb-4 d-flex justify-content-evenly flex-row align-items-center">
+                                    <p class="mb-0" style="font-weight: 500;">Sold&nbsp&nbsp&nbsp</p>
+                                    <input type="text" style="font-weight: 500;" class="form-control w-50 border border-white border-2 text-white bg-primary" value="${data.sold}" disabled>
+                                </div>
+                                <div class="mb-4 d-flex justify-content-evenly flex-row align-items-center">
+                                    <p class="mb-0" style="font-weight: 500;">Stock&nbsp</p>
+                                    <input type="text" style="font-weight: 500;" class="form-control w-50 border border-white border-2 text-white bg-primary" value="${data.stock}" disabled>
+                                </div>
+                            </div>
+                        </div>`;
+                        $('#productDetails').hide().html(productDetailsHtml).fadeIn(500);
+                    } else {
+                        $('#productDetails').hide().html('<h4>Product not found or unauthorized.</h4>').fadeIn(500);
+                    }
+                },
+                error: function() {
+                    $('#productDetails').hide().html('<h4>Error retrieving product details.</h4>').fadeIn(500);
+
+                }
+            });
+        })
+
+
+    })
+</script>
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}

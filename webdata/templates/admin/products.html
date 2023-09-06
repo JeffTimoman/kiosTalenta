@@ -36,6 +36,10 @@
                         <!-- arrow-left -->
                         Manage Product Type
                     </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.add_stock')}}">
+                        <i class="me-1" data-feather="plus"></i>
+                        Add Stock
+                    </a>
                     <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.add_product')}}">
                         <i class="me-1" data-feather="plus"></i>
                         Add Product
@@ -68,32 +72,49 @@
         </div>
     </div>
     <div class="card mb-4">
-        <!-- <div class="card-header">
-        </div> -->
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-3">
+                    <select id="userProfileAction" class="row-md-6 ml-5 form-select">
+                        <option value="1">Delete Selected Products</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-md btn-outline-warning" id="selectAllProducts">Select All</button>
+                    <button class="btn btn-md btn-outline-primary" type="button" id="actionSubmit">Submit</button>
+                </div>
+            </div>
+        </div>
         <div class="card-body" id="products">
             <table id="productsTable"->
                 <thead>
                     <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="checkAllButton" disabled>
+                        </th>
                         <th>ID</th>
                         <th>Code</th>
                         <th>Barcode</th>
                         <th>Name</th>
                         <th>Type</th>
                         <th>Price</th>
-                        <th>Quantity</th>
+                        <th>Stock</th>
                         <th>Sold</th>
                         <th>Last Modified</th>
                     </tr>
                 </thead>
                 <tfoot>
                     <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="checkAllButton" disabled>
+                        </th>
                         <th>ID</th>
                         <th>Code</th>
                         <th>Barcode</th>
                         <th>Name</th>
                         <th>Type</th>
                         <th>Price</th>
-                        <th>Quantity</th>
+                        <th>Stock</th>
                         <th>Sold</th>
                         <th>Last Modified</th>
                     </tr>
@@ -101,13 +122,14 @@
                 <tbody>
                     {% for product in products %}
                         <tr>
+                            <td><input type="checkbox" class="form-check-input"></td>
                             <td>{{product.id}}</td>
                             <td>{{product.code}}</td>
                             <td>{{product.barcode}}</td>
                             <td>{{product.name}}</td>
                             <td>{{product.product_type_name}}</td>
                             <td>{{product.price}}</td>
-                            <td>{{product.quantity}}</td>
+                            <td>{{product.stock}}</td>
                             <td>{{product.sold}}</td>
                             <td>{{product.last_modified}}</td>
                         </tr>
@@ -146,16 +168,34 @@
 
 <script>
     $(document).ready(function(){
-        $('#editClassModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget)
-
-            var row = button.closest('tr')
-
-            var id = row.find('td:eq(0)').text()
-            var name = row.find('td:eq(1)').text()
-
-            $('#className').val(name)
-            $('#classId').val(id)
+        $('#selectAllProducts').click(function(){
+            var all_checkboxes = document.querySelectorAll("input[type=checkbox]");
+            for (var i = 0; i < all_checkboxes.length; i++){
+                all_checkboxes[i].click()
+            }   
+        });
+        $('#actionSubmit').click(function(){
+            var checked_id = [];
+            var all_checkboxes = document.querySelectorAll("input[type=checkbox]");
+            for (var i = 0; i < all_checkboxes.length; i++){
+                if (all_checkboxes[i].checked){
+                    checked_id.push(all_checkboxes[i].parentElement.parentElement.children[1].innerHTML)
+                }
+            }
+            console.log(checked_id)
+            if (checked_id.length > 0) {
+                var url = "{{url_for('admin.delete_product')}}?id=" + checked_id.join('&id=');
+                window.location.href = url;
+            } else {
+                $('#alertCol').html(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Failed!</strong> No product is selected.
+                            <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    ` + $('#alertCol').html());
+                window.scrollTo(0, 0);
+                return;
+            }
         })
     })
 </script>
