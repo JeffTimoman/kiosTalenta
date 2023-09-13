@@ -10,6 +10,10 @@ from datetime import datetime
 
 main = Blueprint('main', __name__)
 
+# import logging
+# logging.basicConfig()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 @main.route("/")
 @login_required
 def index():
@@ -54,6 +58,7 @@ def login():
             if user and user.user_type != 0 and user.active == False:
                 flash('Your account is not active. Please contact admin', 'danger')
                 return redirect(url_for('main.login'))
+            
             if user and bcrypt.check_password_hash(user.password, loginForm.password.data):        
                 login_user(user, remember=loginForm.remember.data)
                 user.last_login = datetime.now(timezone('Asia/Jakarta'))
@@ -63,7 +68,6 @@ def login():
             else : 
                 flash('Login Unsuccessful. Please check email and password', 'danger')
                 return redirect(url_for('main.login'))
-            
     return render_template('/main/login.html', title='Login', loginForm=loginForm, registrationForm=registrationForm)
 
 @main.route("/logout")

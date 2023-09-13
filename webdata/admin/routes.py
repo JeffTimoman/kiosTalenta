@@ -22,6 +22,10 @@ import os
 import json
 import re
 
+# import logging
+# logging.basicConfig()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 admin = Blueprint('admin', __name__)
 
 CORS(admin, resources={r"/api/*": {"origins": "*"}})
@@ -41,6 +45,11 @@ def index():
     return render_template('admin/index.html')
 
 
+@admin.route('/products/edit_product/<int:id>')
+@login_required
+def edit_product(id):
+    
+    return render_template('admin/product_details.html')
 
 @admin.route("/products")
 @login_required
@@ -91,26 +100,52 @@ def add_product():
         
     return render_template('admin/add_product.html', addProductForm=addProductForm)
 
+@admin.route("/products/add_stock_barcode", methods=['GET', 'POST'])
+@login_required
+def add_stock_2():
+    addStockForm = AddStockForm()
+    if request.method == 'POST':
+        if addStockForm.validate_on_submit():
+            product = Product.query.filter_by(barcode=addStockForm.barcode.data).first()
+            if product is None:
+                flash(f"Product with barcode {addStockForm.barcode.data} not found!", 'danger')
+                return redirect(url_for('admin.add_stock'))
+            if (addStockForm.stock.data < 0):
+                flash(f"Stock must be greater than 0!", 'danger')
+                return redirect(url_for('admin.add_stock'))
+            product.stock += addStockForm.stock.data
+            db.session.commit()
+            flash(f"Stock for product {product.name} has been added!", 'success')
+            return redirect(url_for('admin.add_stock_2'))
+        else : 
+            for error in addStockForm.errors:
+                the_error_text = addStockForm.errors[error][0]
+                flash(f"{error} : {the_error_text}", 'danger')
+    return render_template('/admin/add_stock.html', addStockForm=addStockForm)
+
 @admin.route("/products/add_stock", methods=['GET', 'POST'])
 @login_required
 def add_stock():
     if request.method == 'POST':
+        
         product_barcode = request.form.get('barcode')
         stock = request.form.get('stock')
         
         product = Product.query.filter_by(barcode=product_barcode).first()
         if product is None:
             flash(f"Product with barcode {product_barcode} not found!", 'danger')
-            return redirect(url_for('admin.add_stock_2'))
+            return redirect(url_for('admin.add_stock'))
         
         if (int(stock) < 0):
             flash(f"Stock must be greater than 0!", 'danger')
-            return redirect(url_for('admin.add_stock_2'))
+            return redirect(url_for('admin.add_stock'))
         
         product.stock += int(stock)
         db.session.commit()
         flash(f"Stock for product {product.name} has been added!", 'success')
-    return render_template('/admin/add_stock.html')
+        return redirect(url_for('admin.add_stock'))
+        
+    return render_template('/admin/add_stock_2.html')
 
 @admin.route("/products/product_types")
 @login_required
@@ -697,8 +732,6 @@ def deactivate_user():
             flash(f"{counter} User has been deactivated!", 'info')
     return make_response(jsonify({'status': 'success'}), 200)
 
-
-
 @admin.route('/api/approve_registration_profile', methods=['POST'])
 def approve_registration_profile():
     if not current_user.is_authenticated:
@@ -811,7 +844,6 @@ def api_get_product_data():
     search = request.args.get('search')
     page = request.args.get('page')
 
-    # Check if the search term looks like a barcode (contains only digits)
     products_query = Product.query.filter(
         (Product.name.ilike(f"%{search}%")) |
         (Product.barcode.ilike(f"%{search}%"))
@@ -833,8 +865,6 @@ def api_get_product_data():
             'more': products_paginated.has_next
         }
     })
-
-
 
 @admin.route('/add_stock_name_form', methods=['POST', 'GET'])
 @login_required

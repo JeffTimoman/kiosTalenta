@@ -189,7 +189,10 @@ class LaundryType(db.Model):
 class LaundryTransaction(db.Model):
     __tablename__ = 'laundry_transactions'
     id = db.Column(db.Integer, primary_key=True)
+    
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    cashier_id = db.Column(db.Integer, db.ForeignKey('users.id'), default=None)
+    
     laundry_type_id = db.Column(db.Integer, db.ForeignKey('laundry_types.id'))
     quantity = db.Column(db.Float)
     
