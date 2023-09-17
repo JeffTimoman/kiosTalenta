@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 
 from webdata.models import User, RegistrationProfile, UserClass, UserRoom, Product
 
-from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm, AddProductForm, AddStockForm
+from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm, AddProductForm, AddStockForm, EditProductForm
 
 from pytz import timezone
 from datetime import datetime
@@ -37,12 +37,19 @@ def save_image(form_picture, user_id):
     form_picture.save(pic_path)
     return pic_name
 
-@admin.route("/")
+
+@admin.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
     if current_user.user_type != 0:
         abort(403)
-    return render_template('admin/index.html')
+    text = None
+    data_api = None 
+    if request.method == 'POST':
+        text = request.form.get('bambang')
+        data_api = 'proses abcd'
+        
+    return render_template('admin/index.html', text=text)
 
 
 @admin.route('/products/edit_product/<int:id>')
@@ -151,6 +158,18 @@ def add_stock():
 @login_required
 def product_types():
     return "test"
+
+@admin.route("/products/product_details/<int:id>")
+@login_required
+def product_details(id):
+    if current_user.user_type != 0:
+        abort(403)
+    product = Product.query.filter_by(id=id).first()
+    if product is None:
+        flash(f"Product not found!", 'danger')
+        return redirect(url_for('admin.products'))
+    editProductForm = EditProductForm()
+    return render_template('admin/product_details.html', product=product, editProductForm=editProductForm)
 
 @admin.route("products/delete_product")
 @login_required
@@ -866,7 +885,3 @@ def api_get_product_data():
         }
     })
 
-@admin.route('/add_stock_name_form', methods=['POST', 'GET'])
-@login_required
-def add_stock_name_form():
-    return render_template('/admin/add_stock_name_form.html')

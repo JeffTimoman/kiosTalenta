@@ -5,8 +5,25 @@
 {% block title %}Dashboard{% endblock title %}
 {% block body %}
     
+
+<div class="container-xl mt-5">
+    <form action="" method="POST">
+        <input type="text" class="form-control" name="text">
+        <button type="submit" class="btn-primary btn mt-3">Click</button>
+        <select name="bambang" id="" class="form-control">
+            <option value="0">Tricep</option>
+            <option value="1">Bicep</option>
+            <option value="chest">Chest</option>
+            <option value="3">Back</option>
+
+        </select>
+    </form>
+
+    <input type="text" name="nothing" id="" value="{{text}}" disabled class="form-control mt-5">
+</div>
+
+
 {% endblock body %}
-    
 {% block content %}
 
 {% endblock content %}

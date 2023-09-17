@@ -118,4 +118,11 @@ class AddStockForm(FlaskForm):
         product = Product.query.filter_by(barcode=self.barcode.data).first()
         if product is None:
             raise ValidationError('Barcode does not exist')
-        
+
+class EditProductForm(FlaskForm):
+    id = StringField('ID', validators=[DataRequired(), Length(min=3, max=50)])
+    name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
+    code = StringField('Code', validators=[DataRequired(), Length(min=3, max=50)])
+    barcode = StringField('Barcode', validators=[DataRequired(), Length(min=3, max=50), Regexp(r'^\d+$', message="Barcode must be a number")])
+    stock = IntegerField('Stock', validators=[DataRequired()])
+    price = IntegerField('Price', validators=[DataRequired()])

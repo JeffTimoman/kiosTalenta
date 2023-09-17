@@ -114,7 +114,7 @@
     </style>
     <form action="" method="POST">
         <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
-        <div class="row mt-3">
+        <div class="row mt-3 mb-5">
             <div class="col-md-12">
                 <a href="{{url_for('admin.user_classes')}}" class="tmp btn btn-warning">Cancel</a>
                 <button class="btn btn-danger" type="submit">Delete</button>

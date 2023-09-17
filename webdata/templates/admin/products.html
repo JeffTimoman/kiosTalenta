@@ -124,7 +124,9 @@
                         <tr>
                             <td><input type="checkbox" class="form-check-input"></td>
                             <td>{{product.id}}</td>
-                            <td>{{product.code}}</td>
+                            <td>
+                                <a href="{{url_for('admin.product_details', id=product.id)}}">{{product.code}}</a>
+                            </td>
                             <td>{{product.barcode}}</td>
                             <td>{{product.name}}</td>
                             <td>{{product.product_type_name}}</td>

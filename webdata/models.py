@@ -127,6 +127,7 @@ class ProductTransaction(db.Model):
     __tablename__ = 'product_transactions'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    transaction_code = db.Column(db.String(25))
     
     cashier_id = db.Column(db.Integer, db.ForeignKey('users.id'), default= None)
     date_created = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
@@ -192,6 +193,7 @@ class LaundryTransaction(db.Model):
     
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     cashier_id = db.Column(db.Integer, db.ForeignKey('users.id'), default=None)
+    transaction_code = db.Column(db.String(25))
     
     laundry_type_id = db.Column(db.Integer, db.ForeignKey('laundry_types.id'))
     quantity = db.Column(db.Float)
