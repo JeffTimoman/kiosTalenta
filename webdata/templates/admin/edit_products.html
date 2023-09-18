@@ -1,0 +1,167 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>  
+    <link rel="stylesheet" href="{{url_for('static', filename='/dist/css/select2.css')}}">  
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+<style>
+    .link_table:visited{
+        color: blue;
+    }
+    .link_table:hover{
+        color: blueviolet;
+        text-decoration: none;
+    }
+    .custom-select2 {
+        width: 200px;
+        height: 40px; /* You can adjust the height as needed */
+    }
+    
+</style>
+
+
+<header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+    <div class="container-fluid px-4">
+        <div class="page-header-content">
+            <div class="row align-items-center justify-content-between pt-3">
+                <div class="col-auto mb-3">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="user"></i></div>
+                        Edit Product
+                    </h1>
+                </div>
+                <div class="col-12 col-xl-auto mb-3">
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.product_types')}}">
+                        <i class="me-1" data-feather="tag"></i>
+                        <!-- arrow-left -->
+                        Manage Product Type
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.add_stock')}}">
+                        <i class="me-1" data-feather="plus"></i>
+                        Add Stock
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.add_product')}}">
+                        <i class="me-1" data-feather="plus"></i>
+                        Add Product
+                    </a>
+                    <a class="btn btn-sm btn-light text-primary" href="{{url_for('admin.products')}}">
+                        <i class="me-1" data-feather="arrow-left"></i>
+                        <!-- arrow-left -->
+                        Back to Products 
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container-xl px-4 mt-4">
+    <div class="row">
+        <div class="col" id="alertCol">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    <form action="" method="POST">
+        {{editProductForm.csrf_token}}
+         <div class="row">
+             <div class="col-xl-4">
+                 <div class="card">
+                     <div class="card-header">
+                         Main Details
+                     </div>
+                     <div class="card-body">
+                         <div class="row">
+                             <div class="col-md-12 mb-3">
+                                 <label for="inputCode">Product Code</label>
+                                 {{ editProductForm.code(class="form-control", id="productCode", type="text", placeholder="AL157 | BX889 | UT199") }}
+                             </div>
+                             <div class="col-md-12 mb-3">
+                                 <label for="inputBarcode">Product Barcode</label>
+                                 {{ editProductForm.barcode(class="form-control", id="productBarcode", type="text", placeholder="Enter barcode (use scanner)") }}
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+             <div class="col-xl-8">
+                 <div class="card">
+                     <div class="card-header">
+                         Other Details
+                     </div>
+                     <div class="card-body">
+                         <div class="row mb-3">
+                             <div class="col-md-12">
+                                 <label for="inputName">Product Name</label>
+                                 {{ editProductForm.name(class="form-control", id="productName", type="text", placeholder="Enter product name") }}
+                             </div>
+                         </div>
+                         <div class="row">
+                             <div class="col-md-4">
+                                 <label for="inputType">Product Type</label>
+                                 {{ editProductForm.product_type(class="form-control form-select", id="productType", type="text", placeholder="Select product type") }}
+                             </div>
+                             <div class="col-md-4">
+                                 <label for="inputPrice">Product Price</label>
+                                 {{ editProductForm.price(class="form-control", id="productPrice", type="text", placeholder="Enter product price") }}
+                             </div>
+                             <div class="col-md-4">
+                                 <label for="inputStock">Product Stock</label>
+                                 {{ editProductForm.stock(class="form-control", id="productStock", type="text", placeholder="Enter product stock") }}
+                             </div>  
+                         </div>
+ 
+                         {{editProductForm.submit(class="btn btn-primary mt-3")}}
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </form>
+</div>
+
+<!-- jquery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('#productType').select2({
+              allowClear: true,
+              placeholder: 'Select product type',
+              theme: 'bootstrap',
+              width: '100%'
+        });
+        var type = `{{product.product_type}}`;
+        var price = `{{product.price}}`;
+        var stock = `{{product.stock}}`;
+        var barcode = `{{product.barcode}}`;
+        var code = `{{product.code}}`;
+        var name = `{{product.name}}`;
+        $('#productPrice').val(price);
+        $('#productStock').val(stock);
+        $('#productBarcode').val(barcode);
+        $('#productCode').val(code);
+        $('#productName').val(name);
+        $('#productType').val(type).trigger('change');
+
+    });
+</script>
+
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='dist/js/module.js')}}"></script>
+{% endblock script %}

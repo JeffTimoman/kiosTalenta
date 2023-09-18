@@ -52,11 +52,91 @@ def index():
     return render_template('admin/index.html', text=text)
 
 
-@admin.route('/products/edit_product/<int:id>')
+@admin.route('/products/edit_product/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_product(id):
+    if current_user.user_type != 0:
+        abort(403)
+    product = Product.query.filter_by(id=id).first()
+    if product is None:
+        flash(f"Product not found!", 'danger')
+        return redirect(url_for('admin.products'))
+    editProductForm = EditProductForm()
     
-    return render_template('admin/product_details.html')
+    if request.method == 'POST':
+        if editProductForm.validate_on_submit():
+            name = editProductForm.name.data
+            price = editProductForm.price.data
+            stock = editProductForm.stock.data
+            product_type = editProductForm.product_type.data.id
+            code = editProductForm.code.data
+            barcode = editProductForm.barcode.data
+            
+            check_barcode = Product.query.filter_by(barcode=barcode).first()
+            check_code = Product.query.filter_by(code=code).first()
+            if check_barcode is not None and check_barcode.id != product.id:
+                flash(f"Barcode {barcode} already exists!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            if check_code is not None and check_code.id != product.id:
+                flash(f"Code {code} already exists!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if name == product.name and price == product.price and stock == product.stock and product_type == product.product_type and code == product.code and barcode == product.barcode:
+                flash(f"No changes made!", 'info')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if name == '' or name == None:
+                flash(f"Name cannot be empty!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if len(name) < 3 or len(name) > 50:
+                flash(f"Name must be between 3 and 50 characters!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if stock < 0:
+                flash(f"Stock must be greater than 0!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if price < 0:
+                flash(f"Price must be greater than 0!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if product_type == None or product_type == '':
+                flash(f"Product Type cannot be empty!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if code == '' or code == None:
+                flash(f"Code cannot be empty!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if len(code) < 3 or len(code) > 50:
+                flash(f"Code must be between 3 and 50 characters!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if barcode == '' or barcode == None:
+                flash(f"Barcode cannot be empty!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            if len(barcode) < 3 or len(barcode) > 50:
+                flash(f"Barcode must be between 3 and 50 characters!", 'danger')
+                return redirect(url_for('admin.edit_product', id=id))
+            
+            product.name = name
+            product.price = price
+            product.stock = stock
+            product.product_type = product_type
+            product.code = code
+            product.barcode = barcode
+            db.session.commit()
+            flash(f"Product {name} has been updated!", 'success')
+            return redirect(url_for('admin.edit_product', id=id))
+        else : 
+            for error in editProductForm.errors:
+                the_error_text = editProductForm.errors[error][0]
+                flash(f"{error} : {the_error_text}", 'danger')
+            redirect(url_for('admin.edit_product', id=id))
+            
+    return render_template('admin/edit_products.html', product=product, editProductForm=editProductForm)
 
 @admin.route("/products")
 @login_required
@@ -159,17 +239,6 @@ def add_stock():
 def product_types():
     return "test"
 
-@admin.route("/products/product_details/<int:id>")
-@login_required
-def product_details(id):
-    if current_user.user_type != 0:
-        abort(403)
-    product = Product.query.filter_by(id=id).first()
-    if product is None:
-        flash(f"Product not found!", 'danger')
-        return redirect(url_for('admin.products'))
-    editProductForm = EditProductForm()
-    return render_template('admin/product_details.html', product=product, editProductForm=editProductForm)
 
 @admin.route("products/delete_product")
 @login_required

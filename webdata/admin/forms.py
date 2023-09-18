@@ -120,9 +120,37 @@ class AddStockForm(FlaskForm):
             raise ValidationError('Barcode does not exist')
 
 class EditProductForm(FlaskForm):
-    id = StringField('ID', validators=[DataRequired(), Length(min=3, max=50)])
     name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
     code = StringField('Code', validators=[DataRequired(), Length(min=3, max=50)])
     barcode = StringField('Barcode', validators=[DataRequired(), Length(min=3, max=50), Regexp(r'^\d+$', message="Barcode must be a number")])
     stock = IntegerField('Stock', validators=[DataRequired()])
     price = IntegerField('Price', validators=[DataRequired()])
+    product_type = QuerySelectField(query_factory=lambda: ProductType.query.order_by(ProductType.name.asc()).all(), get_label="name")
+    submit = SubmitField('Save Changes')
+    
+    def validate_code_unique(self, code):
+        product = Product.query.filter_by(code=self.code.data).first()
+        if product:
+            raise ValidationError('Code already exists')
+    
+    def validate_barcode_unique(self, barcode):
+        product = Product.query.filter_by(barcode=self.barcode.data).first()
+        if product:
+            raise ValidationError('Barcode already exists')
+        
+    def validate_stock(self, stock):
+        if self.stock.data < 0:
+            raise ValidationError('Stock must be greater than 0')
+    
+    def validate_price(self, price):
+        if self.price.data < 0:
+            raise ValidationError('Price must be greater than 0')
+    
+    def validate_product_type(self, product_type):
+        if self.product_type.data is None:
+            raise ValidationError('Product Type must be selected')
+    
+    def validate_barcode_number(self, barcode):
+        for char in self.barcode.data:
+            if not char.isdigit():
+                raise ValidationError('Barcode must be a number')
