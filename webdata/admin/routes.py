@@ -8,9 +8,9 @@ from flask_cors import CORS, cross_origin
 
 from werkzeug.utils import secure_filename
 
-from webdata.models import User, RegistrationProfile, UserClass, UserRoom, Product
+from webdata.models import User, RegistrationProfile, UserClass, UserRoom, Product, ProductType
 
-from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm, AddProductForm, AddStockForm, EditProductForm
+from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm, AddProductForm, AddStockForm, EditProductForm, AddProductTypeForm, EditProductTypeForm
 
 from pytz import timezone
 from datetime import datetime
@@ -51,6 +51,78 @@ def index():
         
     return render_template('admin/index.html', text=text)
 
+
+@admin.route('/products/product_types', methods=['GET', 'POST'])
+@login_required
+def product_types():
+    if current_user.user_type != 0:
+        abort(403)
+    product_types = ProductType.query.all()
+    addProductTypeForm = AddProductTypeForm()
+    editProductTypeForm = EditProductTypeForm()
+    
+    if request.method == 'POST':
+        action = request.args.get('action')
+        if action == 'add':
+            name = addProductTypeForm.name.data
+            if addProductTypeForm.validate_on_submit():
+                
+                check_name = ProductType.query.filter_by(name=name).first()
+                if check_name is not None:
+                    flash(f"Product Type {name} already exists!", 'danger')
+                    return redirect(url_for('admin.product_types'))
+                
+                if name == '' or name == None:
+                    flash(f"Name cannot be empty!", 'danger')
+                    return redirect(url_for('admin.product_types'))
+                
+                if len(name) < 3 or len(name) > 50:
+                    flash(f"Name must be between 3 and 50 characters!", 'danger')
+                    return redirect(url_for('admin.product_types'))
+                
+                data = ProductType(name=name)
+                db.session.add(data)
+                db.session.commit()
+                flash(f"Product Type {name} has been added!", 'success')
+                return redirect(url_for('admin.product_types'))
+            else :
+                for error in addProductTypeForm.errors:
+                    the_error_text = addProductTypeForm.errors[error][0]
+                    flash(f"{error} : {the_error_text}", 'danger')
+                redirect(url_for('admin.product_types'))
+        if action == 'edit':
+            if editProductTypeForm.validate_on_submit():
+                name = editProductTypeForm.name.data
+                id = editProductTypeForm.id.data
+                
+                data = ProductType.query.filter_by(id=id).first()
+                check_name = ProductType.query.filter_by(name=name).first()
+                
+                if data is None:
+                    flash(f"Product Type not found!", 'danger')
+                    return redirect(url_for('admin.product_types'))
+                if data.name == name:
+                    flash(f"No changes made!", 'info')
+                    return redirect(url_for('admin.product_types'))
+                if check_name is not None:
+                    flash(f"Product Type {name} already exists!", 'danger')
+                    return redirect(url_for('admin.product_types')) 
+                
+                data.name = name
+                db.session.commit()
+                flash(f"Product Type with id : {id} has been updated!", 'success')
+                return redirect(url_for('admin.product_types'))
+            else :
+                for error in editProductTypeForm.errors:
+                    the_error_text = editProductTypeForm.errors[error][0]
+                    flash(f"{error} : {the_error_text}", 'danger')
+                redirect(url_for('admin.product_types'))    
+    return render_template('admin/product_types.html', product_types=product_types, addProductTypeForm=addProductTypeForm, editProductTypeForm=editProductTypeForm)
+
+@admin.route('/products/product_type/<int:id>', methods=['GET', 'POST'])
+@login_required
+def product_type(id):
+    return 'hai'
 
 @admin.route('/products/edit_product/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -234,10 +306,6 @@ def add_stock():
         
     return render_template('/admin/add_stock_2.html')
 
-@admin.route("/products/product_types")
-@login_required
-def product_types():
-    return "test"
 
 
 @admin.route("products/delete_product")

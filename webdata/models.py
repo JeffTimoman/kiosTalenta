@@ -102,6 +102,10 @@ class ProductType(db.Model):
     def __repr__(self):
         return f"ProductType('{self.name}')"
     
+    @property
+    def product_count(self):
+        return Product.query.filter_by(product_type=self.id).count()
+    
 class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer, primary_key=True)

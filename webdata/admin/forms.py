@@ -154,3 +154,12 @@ class EditProductForm(FlaskForm):
         for char in self.barcode.data:
             if not char.isdigit():
                 raise ValidationError('Barcode must be a number')
+            
+class AddProductTypeForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
+    submit = SubmitField('Add Product Type')
+
+class EditProductTypeForm(FlaskForm):
+    id = StringField('ID', validators=[DataRequired()])
+    name = StringField('Name', validators=[DataRequired(), Length(min=3, max=50)])
+    submit = SubmitField('Save Changes')
