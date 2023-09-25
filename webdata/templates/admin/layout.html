@@ -71,7 +71,7 @@
                                 Admin
                             </a>
                             <!-- Cashier Dashboard -->
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{{url_for('admin.cashier')}}">
                                 <!-- <div class="nav-link-icon"><i data-feather="monitor"></i></div> -->
                                 <div class="nav-link-icon"><i class="fa-solid fa-cash-register"></i></div>
                                 Cashier
@@ -134,7 +134,7 @@
                                     </a>
                                     <div class="collapse" id="pagesCollapseProductTransaction" data-bs-parent="#accordionSidenavPagesMenu">
                                         <nav class="sidenav-menu-nested nav">
-                                            <a class="nav-link" href="#">Offline</a>
+                                            <a class="nav-link" href="{{url_for('admin.transaction_product_offline')}}">Offline</a>
                                             <a class="nav-link" href="#">Online</a>
                                         </nav>
                                     </div>

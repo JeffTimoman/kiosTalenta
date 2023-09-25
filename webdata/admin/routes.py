@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, url_for, flash, redirect, request, abort, jsonify, make_response, session
 
-from webdata import db, bcrypt, app
+from webdata import db, bcrypt, app, thisConfig
 from flask_login import login_user, current_user, logout_user, login_required
 from webdata.main.forms import LoginForm, RegistrationForm
 
@@ -8,7 +8,7 @@ from flask_cors import CORS, cross_origin
 
 from werkzeug.utils import secure_filename
 
-from webdata.models import User, RegistrationProfile, UserClass, UserRoom, Product, ProductType
+from webdata.models import User, RegistrationProfile, UserClass, UserRoom, Product, ProductType, ProductTransaction, ProductTransactionDetail
 
 from webdata.admin.forms import EditUserForm, ChangeUserPasswordForm, AddUserForm, EditClassForm, AddClassForm, EditRoomForm, AddRoomForm, AddProductForm, AddStockForm, EditProductForm, AddProductTypeForm, EditProductTypeForm
 
@@ -37,6 +37,16 @@ def save_image(form_picture, user_id):
     form_picture.save(pic_path)
     return pic_name
 
+def product_transaction_code_generator():
+    today_date = datetime.now(timezone('Asia/Jakarta'))
+    year = today_date.strftime("%Y")
+    month = today_date.strftime("%m")
+    date = today_date.strftime("%d")
+    # hour:minute
+    hour = today_date.strftime("%H")
+    minute = today_date.strftime("%M")
+    transaction_today = ProductTransaction.query.filter_by(date_created=today_date).count()
+    return f"PR.{year}{month}{date}.{hour}:{minute}.{transaction_today + 1}.{thisConfig.SHOP_CODE}"
 
 @admin.route("/", methods=['GET', 'POST'])
 @login_required
@@ -51,6 +61,18 @@ def index():
         
     return render_template('admin/index.html', text=text)
 
+@admin.route('/cashier', methods=['GET', 'POST'])
+@login_required
+def cashier():
+
+    return render_template('admin/cashier.html')
+
+@admin.route('/transaction/product/offline', methods=['GET', 'POST'])
+@login_required
+def transaction_product_offline():
+    transaction_offlines = ProductTransaction.query.filter_by(transaction_type=0).all()
+    print(transaction_offlines)
+    return render_template('admin/transaction_product_offline.html', transaction_offlines=transaction_offlines)
 
 @admin.route('/products/product_types', methods=['GET', 'POST'])
 @login_required
@@ -305,7 +327,6 @@ def add_stock():
         return redirect(url_for('admin.add_stock'))
         
     return render_template('/admin/add_stock_2.html')
-
 
 
 @admin.route("products/delete_product")
@@ -1012,7 +1033,11 @@ def api_get_product_data():
     for product in products_paginated.items:
         results.append({
             'id': product.barcode,
-            'text': product.barcode + " - " + product.name 
+            'text': product.barcode + " - " + product.name,
+            'name': product.name,
+            'real_id': product.id,
+            'stock': product.stock,
+            'price': product.price,
         })
 
     return jsonify({
@@ -1022,3 +1047,80 @@ def api_get_product_data():
         }
     })
 
+@admin.route('/api/get_customer_data', methods=['GET', 'POST'])
+@login_required
+def api_get_customer_data():
+    search = request.args.get('search')
+    page = request.args.get('page')
+
+    users_query = User.query.filter(
+        (User.name.ilike(f"%{search}%")) |
+        (User.email.ilike(f"%{search}%"))
+    ).filter_by(user_type=2)
+
+    per_page = 10
+    users_paginated = users_query.paginate(page=int(page), per_page=per_page)
+
+    results = []
+    for user in users_paginated.items:
+        results.append({
+            'id': user.id,
+            'text': user.name + " - " + user.user_class_name,
+            'name': user.name,
+            'email': user.email,
+        })
+
+    return jsonify({
+        'results': results,
+        'pagination': {
+            'more': users_paginated.has_next
+        }
+    })
+    
+
+
+@app.route('/admin/api/submit_product_transaction', methods=['POST'])
+@login_required
+def api_submit_product_transaction():
+    if current_user.user_type != 0:
+        return jsonify({'status': 'fail', 'message': 'Access denied'}), 403
+
+    data = request.get_json()
+    print(data)
+    customer = data['customer']
+    product_bought = data['productTransactionDetails']
+    payment_method = data['paymentMethod']
+    
+    print(customer)
+
+    # Validate the data (you can add more validation as needed)
+    if not customer or not payment_method or not product_bought:
+        return jsonify({'status': 'fail', 'message': 'Invalid data'}), 400
+
+    if User.query.filter_by(id=customer).first() is None:
+        return jsonify({'status': 'fail', 'message': 'Customer not found'}), 404
+    
+    for product in product_bought:
+        temp = Product.query.filter_by(id=product['id']).first()
+        if temp is None:
+            return jsonify({'status': 'fail', 'message': 'Product not found'}), 404
+        
+        if temp.stock < product['quantity']:
+            return jsonify({'status': 'fail', 'message': 'Product out of stock'}), 400
+    transaction_code = product_transaction_code_generator()
+    productTransaction = ProductTransaction(payment_method=payment_method, cashier_id=current_user.id, customer_id=customer, transaction_code=transaction_code)
+    db.session.add(productTransaction)
+    db.session.commit()
+    
+    for product in product_bought:
+        temp = Product.query.filter_by(id=product['id']).first()
+        temp.stock -= product['quantity']
+        temp.sold += product['quantity']
+        db.session.commit()
+        productTransactionDetail = ProductTransactionDetail(product_id=product['id'], transaction_id=productTransaction.id, quantity=product['quantity'], current_price=product['price'])
+        db.session.add(productTransactionDetail)
+        db.session.commit()
+    flash('Transaction processed successfully', 'success')
+    
+    # Assuming the transaction was successful
+    return jsonify({'status': 'success', 'message': 'Transaction processed successfully'}), 200

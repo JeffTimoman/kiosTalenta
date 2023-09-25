@@ -1,0 +1,433 @@
+{% extends 'admin/layout.html'%}
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>  
+<link rel="stylesheet" href="{{url_for('static', filename='/dist/css/select2.css')}}">
+{% endblock head %}
+{% block title %}Dashboard{% endblock title %}
+{% block body %}
+
+<style>
+    .table-responsive {
+        max-height:70vh;
+    }
+    
+</style>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editProduct" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalCenterTitle">Product Details</h5>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label for="productID">ID</label>
+                            <input type="text" id="productID" value='0' class="form-control" disabled>
+                        </div>
+                        <div class="col-md-8 mb-2">
+                            <label for="productID">Barcode</label>
+                            <input type="text" id="productBarcode" value='0' class="form-control" disabled>
+                        </div>
+                        <div class="col-md-12 mb-2">
+                            <label for="productID">Name</label>
+                            <input type="text" id="productName" value='Product 1' class="form-control" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="productID">Price</label>
+                            <input type="number" id="productPrice" value='0' class="form-control" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="productID">Quantity</label>
+                            <input type="number" id="productQuantity" value='1' class="form-control" min="1" max="">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-bs-dismiss="modal" id="cancelEdit">Close</button>
+                <button class="btn btn-primary" type="button" id="saveEdit">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkOutProductModal" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalCenterTitle">Product Details</h5>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="" id="checkOutForm" method="POST">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label for="">Payment</label>
+                            <!-- <input type="hidden" name="paymentMethod" class="form-control" value="QRIS"> -->
+                            <input type="text" name="paymentMethod" class="form-control" value="QRIS" readonly required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="">Cashier</label>
+                            <input type="text" name="cashier" class="form-control" value="{{current_user.name}}" readonly>
+                        </div>
+                        <div class="container col-md-12 px-3">
+                            <input id="productTransactionDetails" name="productTransactionDetails" type="hidden">
+                            <table class="table" id="checkOutModalTable" style="max-height: 70vh; overflow-y: scroll;">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total Price</th>
+                                    </tr>
+                                </thead>
+    
+                                <tbody>
+                                    <tr>
+                                        <td>Product 1</td>
+                                        <td>10000</td>
+                                        <td>2</td>
+                                        <td>20000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="">Customer</label>
+                            <select name="customer" class="customerCheckout form-select" required="required" style="z-index: 100;"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="">Total</label>
+                            <input type="text" name="total" class="form-control" value="0" id="totalPrice" disabled>
+                        </div>
+                    </div>
+                </div>
+            </form>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal" id="cancelCheckout">Close</button>
+                    <button class="btn btn-primary" type="button" id="confirmCheckOutModal">Checkout</button>
+                </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4 mt-3">
+    <div class="row">
+        <div class="col" id="alertCol">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- <button class="btn btn-primary">Add</button> -->
+                            <select name="barcode" class="product-table form-select" required="required" autofocus></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" >
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Barcode</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody  id="checkOutProduct">
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <button class="btn btn-success" id="checkOutOrderButton">Checkout Orders</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jquery latest -->
+<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+
+    $(document).ready(function () {
+        var data = {
+            'selectedProducts': [] // Add an array to store selected products
+        }
+        function populateCheckoutTable() {
+            const checkoutTable = $('#checkOutModalTable tbody');
+            checkoutTable.empty(); // Clear the table
+            
+            let finalTotalPrice = 0;
+            data.selectedProducts.forEach(function (product) {
+                const totalPrice = product.price * product.quantity;
+                checkoutTable.append(
+                    '<tr>' +
+                    '<td>' + product.name + '</td>' +
+                    '<td>' + product.price + '</td>' +
+                    '<td>' + product.quantity + '</td>' +
+                    '<td>' + totalPrice + '</td>' +
+                    '</tr>'
+                );
+                finalTotalPrice += totalPrice;
+            });
+            console.log(finalTotalPrice)
+            $('#totalPrice').val(finalTotalPrice);
+        }
+        
+        // Event handler for the "Checkout Orders" button
+        $('#checkOutOrderButton').click(function () {
+            populateCheckoutTable(); // Populate the checkout table
+            if (data.selectedProducts.length === 0) {
+                $('#alertCol').html(
+                    '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                    'Please select at least one product' +
+                    '<button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>' + $('#alertCol').html()
+                );
+                return;
+            }
+            let temp = data.selectedProducts;
+            let productTransactionDetails = [];
+            for (let i = 0; i < temp.length; i++) {
+                productTransactionDetails.push({
+                    'id': temp[i].id,
+                    'quantity': temp[i].quantity
+                });
+            }
+
+            $('#productTransactionDetails').val(JSON.stringify(productTransactionDetails));
+            $('#checkOutProductModal').modal('show'); // Show the checkout modal
+        });
+
+        $('#confirmCheckOutModal').click(function(){
+            let customer = $('.customerCheckout').val();
+            let temp = data.selectedProducts;
+            let paymentMethod = $('input[name="paymentMethod"]').val();
+            
+            // Prepare the data to send to the backend
+            let transactionData = {
+                customer: customer,
+                paymentMethod: paymentMethod,
+                productTransactionDetails: temp
+            };
+        
+            // Make an AJAX request to the backend API
+            $.ajax({
+                type: 'POST',
+                url: '/admin/api/submit_product_transaction', // Update with your API endpoint URL
+                data: JSON.stringify(transactionData),
+                contentType: 'application/json',
+                success: function(response) {
+                    console.log(response)
+                    // Check the response from the backend
+                    if (response.status === 'success') {
+                        // Transaction was successful
+                        alert('Transaction successful!');
+                        location.reload();
+                        // You can perform any other actions here
+                    } else {
+                        // Transaction failed
+                        alert('Transaction failed: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log(error)
+                    alert('Error occurred while processing the transaction: ' + error);
+                }
+            });
+        });
+        
+    
+        $('.customerCheckout').select2({
+            ajax: {
+                delay: 250,
+                url: "{{url_for('admin.api_get_customer_data')}}",
+                data: function (params) {
+                    var query = {
+                        search: params.term,
+                        page: params.page || 1
+                    }
+
+                    return query;
+                }
+            },
+            allowClear: true,
+            placeholder: 'Select a customer',
+            width: '100%',
+            theme: 'bootstrap',
+            dropdownParent: $("#checkOutProductModal")
+        });
+        
+        $('.product-table').select2({
+            ajax: {
+                delay: 250,
+                url: "{{url_for('admin.api_get_product_data')}}",
+                data: function (params) {
+                    var query = {
+                        search: params.term,
+                        page: params.page || 1
+                    }
+
+                    return query;
+                }
+            },
+            allowClear: true,
+            placeholder: 'Select a product',
+            width: '100%',
+            theme: 'bootstrap',
+        });
+
+        $('.product-table').on('select2:select', function (e) {
+            let temp = e.params.data;
+
+            // Check if the selected product already exists in the array
+            const existingProduct = data.selectedProducts.find(product => product.id === temp.real_id);
+
+            if (existingProduct) {
+                // If it exists, increment the quantity
+                existingProduct.quantity++;
+            } else {
+                // If it doesn't exist, add it to the array
+                data.selectedProducts.push({
+                    'id': temp.real_id,
+                    'barcode': temp.id,
+                    'name': temp.name,
+                    'price': temp.price, // Include the price here
+                    'quantity': 1,
+                    'stock': temp.stock
+                });
+            }
+
+            // Clear the table and re-render it with the updated data
+            renderTable();
+            console.log(data.selectedProducts)
+
+            // Clear the Select2 selection
+            $('.product-table').val(null).trigger('change');
+            $('.product-table').select2('open');
+        });
+
+        // Function to render the table with the current selected products
+        function renderTable() {
+            $('#checkOutProduct').empty(); // Clear the table
+
+            data.selectedProducts.forEach(function (product) {
+                $('#checkOutProduct').append(
+                    '<tr>' +
+                    '<td>' + product.id + '</td>' +
+                    '<td>' + product.barcode + '</td>' +
+                    '<td>' + product.name + '</td>' +
+                    '<td>' + product.price + '</td>' + // Include the price here
+                    '<td>' + product.quantity + '</td>' +
+                    '<td>' +
+                    '<button class="btn btn-datatable btn-icon btn-transparent-dark" data-bs-target="#editProduct" data-bs-toggle="modal">' +
+                        '<i class="fa-solid fa-pen-to-square"></i>' +
+                    '</button>' +
+                    '<button class="btn btn-datatable btn-icon btn-transparent-dark">' +
+                    '<i class="fa-solid fa-trash"></i>' +
+                    '</button>' +
+                    '</td>' +
+                    '</tr>'
+                        );
+                    });
+                }
+        
+        $('#editProduct').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget)
+            var row = button.closest('tr')
+            var id = row.find('td:eq(0)').text()
+            var barcode = row.find('td:eq(1)').text()
+            var name = row.find('td:eq(2)').text()
+            var price = row.find('td:eq(3)').text()
+            var quantity = row.find('td:eq(4)').text()
+            $('#productID').val(id);
+            $('#productBarcode').val(barcode);
+            $('#productName').val(name);
+            $('#productPrice').val(price);
+            $('#productQuantity').val(quantity);
+            let temp;
+            for (let i = 0; i < data.selectedProducts.length; i++) {
+                if (data.selectedProducts[i].id == id) {
+                    temp = data.selectedProducts[i];
+                    break;
+                }
+            }
+            $('#productQuantity').attr('max', temp.stock);  
+        });
+
+        $('#saveEdit').click(function () {
+            // Get the values entered in the modal
+            var id = $('#productID').val();
+            var barcode = $('#productBarcode').val();
+            var name = $('#productName').val();
+            var price = $('#productPrice').val();
+            var quantity = $('#productQuantity').val();
+
+            // Update the data for the selected product
+            let selectedProduct;
+            for (let i = 0; i < data.selectedProducts.length; i++) {
+                if (data.selectedProducts[i].id == id) {
+                    selectedProduct = data.selectedProducts[i];
+                    break;
+                }
+            }
+            if (selectedProduct) {
+                selectedProduct.barcode = barcode;
+                selectedProduct.name = name;
+                selectedProduct.price = price;
+                selectedProduct.quantity = quantity;
+
+                if (selectedProduct.quantity > selectedProduct.stock) {
+                    selectedProduct.quantity = selectedProduct.stock;
+                }
+            }
+
+            // Re-render the table with the updated data
+            renderTable();
+
+            // Close the modal
+            $('#cancelEdit').click();
+        });
+
+    });
+
+</script>
+
+
+
+
+
+{% endblock body %}
+{% block content %}
+
+{% endblock content %}

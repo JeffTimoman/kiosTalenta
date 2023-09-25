@@ -79,8 +79,13 @@ class User(db.Model, UserMixin):
     
     @property
     def user_class_name(self):
-        result = UserClass.query.filter_by(id=self.user_class_id).first()
-        return result.name
+        if self.user_class_id is not None:
+            return UserClass.query.filter_by(id=self.user_class_id).first().name
+
+        else: 
+            return "None"
+            
+        
     
     @property
     def room_name(self):
@@ -89,7 +94,6 @@ class User(db.Model, UserMixin):
             return "----"
         return result.name
     
-
     def __repr__(self):
         return f"User('{self.name}', '{self.email}', '{self.user_type}', '{self.active}')"
     
@@ -130,13 +134,32 @@ class Product(db.Model):
 class ProductTransaction(db.Model):
     __tablename__ = 'product_transactions'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    customer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     transaction_code = db.Column(db.String(25))
+    payment_method = db.Column(db.String(25))
     
     cashier_id = db.Column(db.Integer, db.ForeignKey('users.id'), default= None)
     date_created = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
     
-    transaction_type = db.Column(db.Integer)
+    transaction_type = db.Column(db.Integer, default=0)
+    
+    @property
+    def customer_name(self):
+        result = User.query.filter_by(id=self.customer_id).first()
+        return result.name
+
+    @property
+    def cashier_name(self):
+        result = User.query.filter_by(id=self.cashier_id).first()
+        return result.name
+    
+    @property
+    def total(self):
+        result = ProductTransactionDetail.query.filter_by(transaction_id=self.id).all()
+        total = 0
+        for item in result:
+            total += item.quantity * item.current_price
+        return total
     # 0 : OFFLINE
     # 1 : ONLINE
 
@@ -147,6 +170,7 @@ class ProductTransactionDetail(db.Model):
     
     quantity = db.Column(db.Integer)
     current_price = db.Column(db.Integer)
+
     
     date_created = db.Column(db.DateTime, default=datetime.now(timezone('Asia/Jakarta')))
 
