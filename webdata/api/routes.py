@@ -51,3 +51,17 @@ def get_user(id):
     user_data['last_login'] = user.last_login
     
     return jsonify({'user' : user_data, 'status': 200}, 200)
+
+@api.route('/login', methods=['GET'])
+def login():
+    email = request.args.get('email')
+    password = request.args.get('password')
+    user = User.query.filter_by(email=email).first()
+    print(email, password)
+    if user and bcrypt.check_password_hash(user.password, password):
+        login_user(user)
+        user.last_ip = request.remote_addr
+        db.session.commit()
+        return jsonify({'message' : 'Login success!', 'status': 200, 'name': user.name, 'room':user.room_name}, 200)
+    else:
+        return jsonify({'message' : 'Login failed!', 'status': 403}, 403)

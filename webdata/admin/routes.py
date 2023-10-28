@@ -21,6 +21,7 @@ import uuid as uuid
 import os
 import json
 import re
+import json
 
 # import logging
 # logging.basicConfig()
@@ -37,6 +38,9 @@ def save_image(form_picture, user_id):
     form_picture.save(pic_path)
     return pic_name
 
+from datetime import datetime
+from pytz import timezone
+
 def product_transaction_code_generator():
     today_date = datetime.now(timezone('Asia/Jakarta'))
     year = today_date.strftime("%Y")
@@ -45,8 +49,17 @@ def product_transaction_code_generator():
     # hour:minute
     hour = today_date.strftime("%H")
     minute = today_date.strftime("%M")
-    transaction_today = ProductTransaction.query.filter_by(date_created=today_date).count()
+
+    start_of_day = today_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_of_day = today_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    transaction_today = ProductTransaction.query.filter(
+        ProductTransaction.date_created >= start_of_day,
+        ProductTransaction.date_created <= end_of_day
+    ).count()
+
     return f"PR.{year}{month}{date}.{hour}:{minute}.{transaction_today + 1}.{thisConfig.SHOP_CODE}"
+
 
 @admin.route("/", methods=['GET', 'POST'])
 @login_required
@@ -1105,7 +1118,7 @@ def api_submit_product_transaction():
         if temp is None:
             return jsonify({'status': 'fail', 'message': 'Product not found'}), 404
         
-        if temp.stock < product['quantity']:
+        if temp.stock < int(product['quantity']):
             return jsonify({'status': 'fail', 'message': 'Product out of stock'}), 400
     transaction_code = product_transaction_code_generator()
     productTransaction = ProductTransaction(payment_method=payment_method, cashier_id=current_user.id, customer_id=customer, transaction_code=transaction_code)
